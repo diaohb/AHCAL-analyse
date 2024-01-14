@@ -26,132 +26,131 @@
 #include "TGraph.h"
 #include "TGaxis.h"
 #include <unordered_map>
-#include <thread>
-#include <mutex>
 using namespace std;
 int main(int argc,char *argv[]){
     double start = clock();
     raw2Root tw;
-    tw.MIPlist(argv[1]);
+    tw.MIPlist(argv[1],argv[2]);
     double end = clock();
     cout<<"end of mip : Time : "<<(end-start)/CLOCKS_PER_SEC<<endl;
     return 0;
 }
-int raw2Root::MIPlist(const string _list){
+int raw2Root::MIPlist(const string _list,string pedestal){
     ReadList(_list);
     TFile *fin,*fout;
     TTree *tin,*tout;
+    fin = TFile::Open(pedestal.c_str(),"READ");
+    if (!fin){
+        cout<<"cant open "<<pedestal<<endl;
+        return 0;
+    }
+    tin = (TTree*)fin->Get("pedestal");
+    if(!tin){
+        cout<<"cant get tree pedestal"<<endl;
+        return 0;
+    }
+    int CellID=0;
+    double pedestal_high=0,pedestal_low=0;
+    tin->SetBranchAddress("cellid",&CellID);
+    tin->SetBranchAddress("highgain_peak",&pedestal_high);
+    unordered_map<int, double> ped_high;
+    for (int i = 0; i < tin->GetEntries(); ++i){
+        tin->GetEntry(i);
+        ped_high[CellID]=pedestal_high;
+    }
+
     fout=TFile::Open(TString(_list)+"_mip.root","recreate");
     unordered_map<int, TH1D*> mmip;
+    unordered_map<int, TH1D*> mmip_chip;
     for(int layer=0;layer<40;layer++){
         TString slayer="layer"+TString(to_string(layer).c_str());
         for(int chip=0;chip<9;chip++){
             TString schip="chip"+TString(to_string(chip).c_str());
+            TString name_chip ="MIP Spectrum "+slayer+" "+schip;
+            mmip_chip[layer*10+chip]=new TH1D(name_chip,name_chip,500,0,1000);
             for(int channel=0;channel<36;channel++){
                 TString schannel="channel"+TString(to_string(channel).c_str());
                 TString name ="MIP Spectrum "+slayer+" "+schip+" "+schannel;
                 int cellid=layer*1e5+chip*1e4+channel;
-                mmip[cellid]=new TH1D(name,name,500,0,3);
+                mmip[cellid]=new TH1D(name,name,500,0,1000);
             }
         }
     }
     tout=new TTree("mip","mip");
-    double MPV=0,width=0,gaus_sigma=0,max_x=0,FWHM=0;
-    double _MPV[40][9][36],_width[40][9][36],_gaus_sigma[40][9][36],_max_x[40][9][36],_FWHM[40][9][36];
-    std::fill(_MPV[0][0],_MPV[0][0]+12960,0);
-    std::fill(_width[0][0],_width[0][0]+12960,0);
-    std::fill(_max_x[0][0],_max_x[0][0]+12960,0);
-    std::fill(_FWHM[0][0],_FWHM[0][0]+12960,0);
-    std::fill(_gaus_sigma[0][0],_gaus_sigma[0][0]+12960,0);
+    double MPV=0,width=0,gaus_sigma=0;
     int cellid=0,entries=0;
     tout->Branch("MPV",&MPV);
     tout->Branch("width",&width);
     tout->Branch("gaus_sigma",&gaus_sigma);
     tout->Branch("cellid",&cellid);
     tout->Branch("entries",&entries);
-    tout->Branch("max_x",&max_x);
-    tout->Branch("FWHM",&FWHM);
     for_each(list.begin(),list.end(),[&](string tmp){
         cout<<"Reading: "<<tmp<<endl;
         fin=TFile::Open(TString(tmp),"read");
-        tin=(TTree*)fin->Get("EventTree");
-        ReadCalibTree(tin);
+        tin=(TTree*)fin->Get("Raw_Hit");
+        ReadTreeBranch(tin);
         for(int n=0;n<tin->GetEntries();n++){
             tin->GetEntry(n);
-            if(MIP(cellID,Hit_E)){
+            if(MIP(cellID,hitTag)){
                 for(int i=0;i<cellID->size();i++){
-                    if(cellID->at(i)/100%100==0)
-                        mmip[cellID->at(i)]->Fill(Hit_E->at(i));
+                    if(cellID->at(i)/100%100==0){
+                        int cid=cellID->at(i);
+                        mmip_chip[cid/10000]->Fill(HG_Charge->at(i)-ped_high[cid]);
+                        mmip[cid]->Fill(HG_Charge->at(i)-ped_high[cid]);
+                    }
                 }
             }
         }    
         fin->Close();
     });
-    mutex g_mutex;
-    auto ffit=[&](int layer){
-        double fr[2];
-        double sv[4], pllo[4], plhi[4], fps[4], fpe[4];
-        double chisqr;
-        int ndf;
-        printf("fitting layer %d ...\n",layer);
-        for(int chip=0;chip<9;chip++){
-            for(int channel=0;channel<36;channel++){
-                int cellid=layer*1e5+chip*1e4+channel;
-                int entries=mmip[cellid]->GetEntries();
-                if(entries<100){
-                    // tout->Fill();
-                    // mmip[cellid]->Write();
-                    continue;
-                }
-                fr[0] = 0.25;fr[1] = 1;
-                pllo[0] = 0;  pllo[1] = 0.3; pllo[2] = 0.5; pllo[3] = 0;
-                plhi[0] = 0.5;plhi[1] = 0.55;plhi[2] = 5000;plhi[3] = 0.5;
-                sv[0] = 0.02; sv[1] = 0.461; sv[2] = 100;   sv[3] = 0.01;
-        g_mutex.lock();
-                langaufit(mmip[cellid], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
-        g_mutex.unlock();
-                double maxx=0,fwhm;
-                langaupro(fps,maxx,fwhm);
-                _max_x[layer][chip][channel]=maxx;
-                _FWHM[layer][chip][channel]=fwhm;
-                _MPV[layer][chip][channel]=fps[1];
-                _width[layer][chip][channel]=fps[0];
-                _gaus_sigma[layer][chip][channel]=fps[3];
-            }
-        }
-        printf("fitted layer %d\n",layer);
-    };
-    thread th[40];
-    for(int i=0;i<40;i++){
-        th[i]=thread(ffit,i);
-    }
-    for(int i=0;i<40;i++){
-        th[i].join();
-    }
     fout->cd();
     TString dir="histogram";
     fout->mkdir(dir);
+    double fr[2];
+	double sv[4], pllo[4], plhi[4], fps[4], fpe[4];
+	double chisqr;
+	int ndf;
     for(int layer=0;layer<40;layer++){
         TString slayer="layer"+TString(to_string(layer).c_str());
+        cout<<"fitting "<<slayer<<" ..."<<endl;
         fout->mkdir(dir+"/"+slayer);
         for(int chip=0;chip<9;chip++){
             TString schip="chip"+TString(to_string(chip).c_str());
             fout->mkdir(dir+"/"+slayer+"/"+schip);
             fout->cd(dir+"/"+slayer+"/"+schip);
+            fr[0] = 150;
+            fr[1] = 900;
+            pllo[0] = 0;
+            pllo[1] = 100;
+            pllo[2] = 1;
+            pllo[3] = 0;
+            plhi[0] = 200;
+            plhi[1] = 700;
+            plhi[2] = mmip_chip[layer*10+chip]->GetEntries()*10;
+            plhi[3] = 200;
+            sv[0] = 20;
+            sv[1] = 344;
+            sv[2] = mmip_chip[layer*10+chip]->GetEntries();
+            sv[3] = 10;
+            langaufit(mmip_chip[layer*10+chip], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
+            sv[0] = fps[0];
+			sv[1] = fps[1];
+			sv[3] = fps[3];
+            mmip_chip[layer*10+chip]->Write();
             for(int channel=0;channel<36;channel++){
                 cellid=layer*1e5+chip*1e4+channel;
                 entries=mmip[cellid]->GetEntries();
+                sv[2] = mmip[cellid]->GetEntries();
                 if(entries<100){
                     tout->Fill();
                     mmip[cellid]->Write();
                     continue;
                 }
+                langaufit(mmip[cellid], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
                 mmip[cellid]->Write();
-                MPV=_MPV[layer][chip][channel];
-                width=_width[layer][chip][channel];
-                gaus_sigma=_gaus_sigma[layer][chip][channel];
-                max_x=_max_x[layer][chip][channel];
-                FWHM=_FWHM[layer][chip][channel];
+                MPV=fps[1];
+                width=fps[0];
+                gaus_sigma=fps[3];
                 tout->Fill();
             }
         }
@@ -172,11 +171,13 @@ int raw2Root::ReadList(const string _list){
 	}
     return 1;
 }
-int raw2Root::MIP(vector<int> *_cellid,vector<double> *Hit_E){
+int raw2Root::MIP(vector<int> *_cellid,vector<int> *hitTag){
     int layerlen[40]={0};
     for(int i=0;i<_cellid->size();i++){
-        int layer=_cellid->at(i)/100000;
-        layerlen[layer]++;
+        if(hitTag->at(i)==1){
+            int layer=_cellid->at(i)/100000;
+            layerlen[layer]++;
+        }
     }
     for(int i=0;i<40;i++){
         if(layerlen[i]>2){

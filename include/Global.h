@@ -29,8 +29,8 @@ inline void decode_cellid(int cellID,int &layer,int &chip,int &channel){
 	channel=cellID%100;
 }
 inline void inverse(double x,double y,int &chip,int &channel){
-	int i=x/40+9;
-	int j=-y/40+9;
+	int i=x/40.3+9;
+	int j=-y/40.3+9;
 	chip=_Chip[j/6][i/6];
 	channel=_Channel[j%6][i%6];
 	if(chip%3!=0){

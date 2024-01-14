@@ -61,3 +61,9 @@ void HBase::ReadTree(const TString &fname,const TString &tname,const string mode
 		tin->SetBranchAddress("Hit_Y",&_Hit_Y);
 		tin->SetBranchAddress("Hit_Z",&_Hit_Z);
 }
+void HBase::Clear(){
+	_Digi_Hit_Energy->clear();
+	_Hit_X->clear();
+	_Hit_Y->clear();
+	_Hit_Z->clear();
+}

@@ -34,12 +34,12 @@ Int_t main(int argc,char *argv[])
 {
     double start = clock();
     raw2Root tw;
-    tw.nCorrect(argv[1],argv[2],argv[3],argv[4]);
+    tw.nCorrect(argv[1],argv[2],argv[3],argv[4],argv[5]);
     double end = clock();
     cout<<"end of RawToRoot : Time : "<<(end-start)/CLOCKS_PER_SEC<<endl;
     return 0;
 }
-int raw2Root::nCorrect(string str_dat,string str_MIP,string output_file,string mode){
+int raw2Root::nCorrect(string str_dat,string str_MIP,string str_SPE,string output_file,string mode){
     //string str_root=find_datname(str_in);
     //string str_out=outputDir+"/"+"cos_ana.root";
     TF1 *fcor=new TF1("fcor","-[0]*log(1-x/[0])",0,5000);
@@ -53,11 +53,15 @@ int raw2Root::nCorrect(string str_dat,string str_MIP,string output_file,string m
     double gain_ratio[Layer_No][chip_No][channel_No];
     double gain_plat[Layer_No][chip_No][channel_No];
     double MIP[Layer_No][chip_No][channel_No];
+    double SPE[Layer_No][chip_No][channel_No];
+    double chi2_ndf[Layer_No][chip_No][channel_No];
+    double NDF[Layer_No][chip_No][channel_No];
     double hitE,hitE_layer[Layer_No],hitNo_layer[Layer_No];
     double ecorrect=0;
     double etotal=0;
     double Edep=0;
     double MIP_E=0.461;//MeV
+    double spe=25;
     const double ref_ped_time=390;
     const double ref_ped_charge=384;
     const double ref_MIP=900;
@@ -68,6 +72,7 @@ int raw2Root::nCorrect(string str_dat,string str_MIP,string output_file,string m
     float slope=0;
     double MPV=0;
     float plat=0;
+    double gain=0,chi2=0,ndf=0;
     double pedestal_time=0;
     double pedestal_charge=0;
     double Layer_E[Layer_No]={0};
@@ -105,6 +110,55 @@ int raw2Root::nCorrect(string str_dat,string str_MIP,string output_file,string m
     }
     tree_in->Delete();
     fin->Close();
+    //read SPE
+    fin = TFile::Open(str_SPE.c_str(),"READ");
+    if (!fin){
+        cout<<"cant open "<<str_MIP<<endl;
+        return 0;
+    }
+    tree_in = (TTree*)fin->Get("sipm_gain");
+    if(!tree_in){
+        cout<<"cant get sipm gain tree"<<endl;
+        return 0;
+    }
+    tree_in->SetBranchAddress("cellid",&CellID);
+    tree_in->SetBranchAddress("gain_fm",&gain);
+    tree_in->SetBranchAddress("chi2_fm",&chi2);
+    tree_in->SetBranchAddress("ndf_fm",&ndf);
+    for (int i = 0; i < tree_in->GetEntries(); ++i){
+        tree_in->GetEntry(i);
+        decode_cellid(CellID,layer,chip,channel);
+        //MIP[layer][chip][channel]=MPV - ped_time[layer][chip][channel];
+        SPE[layer][chip][channel]=gain;
+        chi2_ndf[layer][chip][channel]=chi2/ndf;
+        NDF[layer][chip][channel]=ndf;
+        //cout<<layer<<" "<<chip<<" "<<channel<<" "<<MPV<<endl;
+        // if(MIP[layer][chip][channel]<200)cout<<"abnormal MIP "<<layer<<" "<<chip<<" "<<channel<<" "<<MPV<<endl;
+    }
+    tree_in->Delete();
+    fin->Close();
+
+    for (int i_layer = 0; i_layer < Layer_No; ++i_layer){
+        for (int i_chip = 0; i_chip < chip_No; ++i_chip){
+            double mean_gain=0;
+            int n_good=0;
+            for (int i_chan = 0; i_chan < channel_No; ++i_chan){
+                if(MIP[i_layer][i_chip][i_chan]<100) MIP[i_layer][i_chip][i_chan]=ref_MIP - ref_ped_time;
+                // cout<<i_layer<<" "<<i_chip<<" "<<i_chan<<endl;
+                // cout<<MIP[i_layer][i_chip][i_chan]<<endl;
+                if(chi2_ndf[layer][chip][channel]<20||NDF[layer][chip][channel]<=3||SPE[layer][chip][channel]<15){
+                    mean_gain+=SPE[layer][chip][channel];
+                    n_good++;
+                }
+            }
+            mean_gain/=n_good;
+            for (int i_chan = 0; i_chan < channel_No; ++i_chan){
+                if(chi2_ndf[layer][chip][channel]>=20||SPE[layer][chip][channel]<mean_gain-5||SPE[layer][chip][channel]>mean_gain+5||NDF[layer][chip][channel]<=3||SPE[layer][chip][channel]<15){
+                    SPE[layer][chip][channel]=mean_gain;
+                }
+            }
+        }
+    }
     //read dat
     fin = TFile::Open(str_dat.c_str(),"READ");
     if (!fin){
@@ -120,15 +174,6 @@ int raw2Root::nCorrect(string str_dat,string str_MIP,string output_file,string m
         ReadMCTree(tree_in);
     }
     cout<<"Read TTree Over"<<endl;
-    for (int i_layer = 0; i_layer < Layer_No; ++i_layer){
-        for (int i_chip = 0; i_chip < chip_No; ++i_chip){
-            for (int i_chan = 0; i_chan < channel_No; ++i_chan){
-                if(MIP[i_layer][i_chip][i_chan]<100) MIP[i_layer][i_chip][i_chan]=ref_MIP - ref_ped_time;
-                // cout<<i_layer<<" "<<i_chip<<" "<<i_chan<<endl;
-                // cout<<MIP[i_layer][i_chip][i_chan]<<endl;
-            }
-        }
-    }
     cout<<"Create outfile"<<endl;
     fout = TFile::Open(str_out.c_str(),"RECREATE");
     if (!fout){
@@ -181,7 +226,7 @@ int raw2Root::nCorrect(string str_dat,string str_MIP,string output_file,string m
             // decode_cellid(cellID->at(i_hit),layer,chip,channel);
             layer=Hit_Z->at(i_hit)/30;
             inverse(Hit_X->at(i_hit),Hit_Y->at(i_hit),chip,channel);
-            fcor->SetParameter(0,n_pixel*30*MIP_E/MIP[layer][chip][channel]);
+            fcor->SetParameter(0,n_pixel*SPE[layer][chip][channel]*MIP_E/MIP[layer][chip][channel]);
             ecorrect=fcor->Eval(Hit_E->at(i_hit));
             // cout<<Hit_E->at(i_hit)<<"  "<<ecorrect<<endl;
             t_Hit_E->push_back(ecorrect);
@@ -195,18 +240,18 @@ int raw2Root::nCorrect(string str_dat,string str_MIP,string output_file,string m
     fout->Close();
     return 1;
 }
-void raw2Root::ReadMCTree(TTree *tree){
-    Reset();
-    // tree ->SetBranchAddress("Run_Num",&_Run_No);
-    // tree ->SetBranchAddress("Event_Time",&_Event_Time);
-    tree ->SetBranchAddress("EventNum",&_Event_No);
-    // tree ->SetBranchAddress("DetectorID",&_Detector_ID);
-    tree ->SetBranchAddress("CellID",&cellID);
-    tree ->SetBranchAddress("Hit_Energy",&Hit_E);
-    tree ->SetBranchAddress("Hit_X",&Hit_X);
-    tree ->SetBranchAddress("Hit_Y",&Hit_Y);
-    tree ->SetBranchAddress("Hit_Z",&Hit_Z);    
-    // tree ->SetBranchAddress("Digi_Energy_HCAL",&Digi_Energy);
-    tree ->SetBranchAddress("Hit_Time",&Hit_Time);
-    // tree ->SetBranchAddress("Cherenkov",&cherenkov);
-}
+// void raw2Root::ReadMCTree(TTree *tree){
+//     Reset();
+//     // tree ->SetBranchAddress("Run_Num",&_Run_No);
+//     // tree ->SetBranchAddress("Event_Time",&_Event_Time);
+//     tree ->SetBranchAddress("EventNum",&_Event_No);
+//     // tree ->SetBranchAddress("DetectorID",&_Detector_ID);
+//     tree ->SetBranchAddress("CellID",&cellID);
+//     tree ->SetBranchAddress("Hit_Energy",&Hit_E);
+//     tree ->SetBranchAddress("Hit_X",&Hit_X);
+//     tree ->SetBranchAddress("Hit_Y",&Hit_Y);
+//     tree ->SetBranchAddress("Hit_Z",&Hit_Z);    
+//     // tree ->SetBranchAddress("Digi_Energy_HCAL",&Digi_Energy);
+//     tree ->SetBranchAddress("Hit_Time",&Hit_Time);
+//     // tree ->SetBranchAddress("Cherenkov",&cherenkov);
+// }

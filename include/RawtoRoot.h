@@ -35,6 +35,7 @@ class raw2Root
     int FillChipBuffer(vector<int> &buffer_v,int cycleID,int triggerID,int layer_id);
     void SetTreeBranch(TTree *tree);
     void SetMIPTreeBranch(TTree *tree);
+    void SetDataTree(TTree *tree);
     void ReadTreeBranch(TTree *tree);
     void ReadCalibTree(TTree *tree);
     void ReadMCTree(TTree *tree);
@@ -45,8 +46,10 @@ class raw2Root
     int AnaCos(string str_in,string outputDir);    
     int AnaBeam(string str_dat,string str_ped,string str_dac,string str_MIP,string output_file);
     int EnergyCalib(string str_dat,string str_ped,string str_dac,string str_MIP,string output_file);
+    int Digitize(string str_dat,string str_ped,string str_dac,string str_MIP,string str_SPE,string output_file);
+    int digi(double energy,double &HG,double &LG,int i);
     int neEnergyCalib(string str_dat,string str_MIP,string output_file,string mode);
-    int nCorrect(string str_dat,string str_MIP,string output_file,string mode);
+    int nCorrect(string str_dat,string str_MIP,string str_SPE,string output_file,string mode);
     int MCDigi(string str_dat,string str_ped,string str_dac,string str_MIP,string output_file);
     int EnergyRes(string str_list,string output_file,int Pri_E);
     int MuonCalib(string str_datalist,string str_ped,string output_file);
@@ -63,7 +66,9 @@ class raw2Root
     int Chipbuffer_empty();
     int ReadList(const string _list);
     int MIPlist(const string _list);
-    int MIP(vector<int> *_cellid,vector<double> *_HG_Charge,vector<int> *_hitTag);
+    int MIPlist(const string _list,string pedestal);
+    int MIP(vector<int> *_cellid,vector<double> *_HG_Charge);
+    int MIP(vector<int> *_cellid,vector<int> *hitTag);
     private:
 //    Event* EventClass;
    ifstream _f_in;
@@ -87,6 +92,7 @@ class raw2Root
    vector< double > _Hit_Time;
    vector< double > _time;
    vector< int > *cellID=0;
+   vector< int > *data_cellid=0;
    vector< int > *bcid=0;
    vector< int > *hitTag=0;
    vector< int > *gainTag=0;

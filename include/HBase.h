@@ -40,6 +40,7 @@ class HBase{
 				vector< double > *_Hit_X;
 				vector< double > *_Hit_Y;
 				vector< double > *_Hit_Z;
+				void Clear();
 
 };
 

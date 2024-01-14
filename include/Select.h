@@ -10,9 +10,11 @@ class Select{
         Select(vector<double>* _Hit_X,vector<double>* _Hit_Y,vector<double>* _Hit_Z, vector<double> *hit_energy,double a);
         ~Select();
 
-        int Result(double &total_energy,vector<double>* &layer_energy,int &_hitlayer,int &_hitno);
+        int Result(double &total_energy,vector<double>* &layer_energy,vector<double>* &layer_hitno,int &_hitlayer,int &_hitno);
         double GetZeta(){return zeta;}
         double GetRMS(){return t_rms;}
+        double GetShower_Start(){return shower_start;}
+        void GetCenter(vector<double>* &layer_hit_X,vector<double>* &layer_hit_Y){layer_hit_X=CenterX;layer_hit_Y=CenterY;}
 
     private:
         void Init();
@@ -30,10 +32,14 @@ class Select{
         vector<double>* Hit_Y;
         vector<double>* Hit_Z;
         vector<double> *Hit_energy;
-        vector<vector<int>> layerd_cellid=vector<vector<int>>(40);
-        vector<vector<double>> layerd_hit_energy=vector<vector<double>>(40);
-        double CenterX[40]={0};
-        double CenterY[40]={0};
+        // vector<vector<int>> layerd_cellid=vector<vector<int>>(40);
+        // vector<vector<double>> layerd_hit_energy=vector<vector<double>>(40);
+        // double CenterX[40]={0};
+        // double CenterY[40]={0};
+        vector<double> temp1;
+        vector<double> temp2;
+        vector<double>* CenterX=&temp1;
+        vector<double>* CenterY=&temp2;
         int maxenergycellid[40];
         int maxchannel[40];
         int maxchip[40];

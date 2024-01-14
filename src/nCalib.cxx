@@ -190,18 +190,18 @@ int raw2Root::neEnergyCalib(string str_dat,string str_MIP,string output_file,str
     fout->Close();
     return 1;
 }
-void raw2Root::ReadMCTree(TTree *tree){
-    Reset();
-    // tree ->SetBranchAddress("Run_Num",&_Run_No);
-    // tree ->SetBranchAddress("Event_Time",&_Event_Time);
-    tree ->SetBranchAddress("EventNum",&_Event_No);
-    // tree ->SetBranchAddress("DetectorID",&_Detector_ID);
-    tree ->SetBranchAddress("CellID",&cellID);
-    tree ->SetBranchAddress("Hit_Energy",&Hit_E);
-    tree ->SetBranchAddress("Hit_X",&Hit_X);
-    tree ->SetBranchAddress("Hit_Y",&Hit_Y);
-    tree ->SetBranchAddress("Hit_Z",&Hit_Z);    
-    // tree ->SetBranchAddress("Digi_Energy_HCAL",&Digi_Energy);
-    tree ->SetBranchAddress("Hit_Time",&Hit_Time);
-    // tree ->SetBranchAddress("Cherenkov",&cherenkov);
-}
+// void raw2Root::ReadMCTree(TTree *tree){
+//     Reset();
+//     // tree ->SetBranchAddress("Run_Num",&_Run_No);
+//     // tree ->SetBranchAddress("Event_Time",&_Event_Time);
+//     tree ->SetBranchAddress("EventNum",&_Event_No);
+//     // tree ->SetBranchAddress("DetectorID",&_Detector_ID);
+//     tree ->SetBranchAddress("CellID",&cellID);
+//     tree ->SetBranchAddress("Hit_Energy",&Hit_E);
+//     tree ->SetBranchAddress("Hit_X",&Hit_X);
+//     tree ->SetBranchAddress("Hit_Y",&Hit_Y);
+//     tree ->SetBranchAddress("Hit_Z",&Hit_Z);    
+//     // tree ->SetBranchAddress("Digi_Energy_HCAL",&Digi_Energy);
+//     tree ->SetBranchAddress("Hit_Time",&Hit_Time);
+//     // tree ->SetBranchAddress("Cherenkov",&cherenkov);
+// }

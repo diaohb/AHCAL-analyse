@@ -57,12 +57,14 @@ int main(int argc,char* argv[]){
             // info(hbase->_Hit_Y->size());
             // info(hbase->_Hit_Z->size());
             double totalenergy=0;
-            vector<double> vtmp={1};
-            vector<double>* layer_energy=&vtmp;
+            vector<double> vtmp1={1};
+            vector<double> vtmp2={1};
+            vector<double>* layer_energy=&vtmp1;
+            vector<double>* layer_hitno=&vtmp2;
             int hitlayer=0;
             int hitno=0;
             Select *select =new Select(hbase->_Hit_X,hbase->_Hit_Y,hbase->_Hit_Z,hbase->_Digi_Hit_Energy,a);
-            if(select->Result(totalenergy,layer_energy,hitlayer,hitno)!=6){
+            if(select->Result(totalenergy,layer_energy,layer_hitno,hitlayer,hitno)!=6){
                 flag++;
                 continue;
             }
