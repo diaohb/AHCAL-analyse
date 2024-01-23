@@ -290,6 +290,8 @@ int raw2Root::Digitize(string str_dat,string str_ped,string str_dac,string str_M
 int raw2Root::digi(double energy,double &HG,double &LG,int i){
     int seed = 0;//time(0)%4294967296;
     TRandom3 *ran=new TRandom3(seed);
+    // nonuniform of Scintillators
+    energy=ran->Gaus(energy,energy*0.048);
     // energy to photon
     int n_photon=energy/MIP_E * _MIP[layer][chip][channel]/SPE[layer][chip][channel]/pde;
     n_photon=ran->Poisson(n_photon);
@@ -320,8 +322,11 @@ int raw2Root::digi(double energy,double &HG,double &LG,int i){
     if(HG>gain_plat[layer][chip][channel]){
         HG=gain_plat[layer][chip][channel];
     }
-    if(LG>lowgain_plat[layer][chip][channel]){
-        LG=lowgain_plat[layer][chip][channel];
+    // if(LG>lowgain_plat[layer][chip][channel]){
+    //     LG=lowgain_plat[layer][chip][channel];
+    // }
+    if(LG>2000){
+        LG=2000;
     }
     HG=round(HG);
     LG=round(LG);

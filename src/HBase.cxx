@@ -34,6 +34,7 @@ void HBase::ReadList(const string &_list)
 				string temp;
 				data>>temp;
 				if(temp=="")continue;
+				if (data.fail())break;
 				list.push_back(temp);
 		}
 }

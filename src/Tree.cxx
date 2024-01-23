@@ -182,3 +182,15 @@ void raw2Root::BranchClear()
         hitTag->clear();
     }
 }
+int raw2Root::ReadList(const string _list){
+    ifstream data(_list);
+	while(!data.eof())
+	{
+			string temp;
+			data>>temp;
+			if(temp=="")continue;
+            if (data.fail())break;
+			list.push_back(temp);
+	}
+    return 1;
+}

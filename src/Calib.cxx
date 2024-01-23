@@ -57,6 +57,7 @@ int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string st
     const double ref_ped_charge=384;
     const double ref_MIP=900;
     const double ref_gain_ratio=26;
+    const int lowgain_plat=2000;
     int Select_EventNo=0;
     int HitNo=0;
     int CellID=0;
@@ -200,10 +201,15 @@ int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string st
             if((hitTag->at(i_hit))==0) continue;
             _cellID.push_back(cellID->at(i_hit));
             decode_cellid(cellID->at(i_hit),layer,chip,channel);
-            // if(cellID->at(i_hit)==540008)cout<<gain_ratio[layer][chip][channel]<<endl;
             if( (HG_Charge->at(i_hit))-ped_time[layer][chip][channel] < gain_plat[layer][chip][channel]-SwitchPoint )hitE=( HG_Charge->at(i_hit) - ped_time[layer][chip][channel] )*MIP_E/MIP[layer][chip][channel];
+            // else{
+            //     if(LG_Charge->at(i_hit)<2000)
+            //         hitE=( LG_Charge->at(i_hit) - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]*MIP_E/MIP[layer][chip][channel];
+            //     else
+            //         hitE=( 2000 - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]*MIP_E/MIP[layer][chip][channel];
+            // } 
             else hitE=( LG_Charge->at(i_hit) - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]*MIP_E/MIP[layer][chip][channel];
-            //hitE=( LG_Charge->at(i_hit) - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]*MIP_E/MIP[layer][chip][channel];
+            
             _Hit_E.push_back(hitE);
             _Hit_X.push_back(Pos_X(channel,chip));
             _Hit_Y.push_back(Pos_Y(channel,chip));

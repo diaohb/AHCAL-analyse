@@ -162,7 +162,7 @@ int Select::Result(double &total_energy,vector<double>* &layer_energy,vector<dou
 	if(!Isstraight()){
 		return 5;
 	}
-    if(layer_hitno->at(0)>1){
+    if(layer_hitno->at(0)>1||layer_hitno->at(0)==0){
         return 8;
     }
     return 6;
