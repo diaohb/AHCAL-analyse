@@ -63,8 +63,9 @@ int main(int argc,char* argv[]){
             vector<double>* layer_hitno=&vtmp2;
             int hitlayer=0;
             int hitno=0;
+            int big_hitno=0;
             Select *select =new Select(hbase->_Hit_X,hbase->_Hit_Y,hbase->_Hit_Z,hbase->_Digi_Hit_Energy,a);
-            if(select->Result(totalenergy,layer_energy,layer_hitno,hitlayer,hitno)!=6){
+            if(select->Result(totalenergy,layer_energy,layer_hitno,hitlayer,hitno,big_hitno)!=6){
                 flag++;
                 continue;
             }

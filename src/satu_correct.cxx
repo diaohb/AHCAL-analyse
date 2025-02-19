@@ -24,7 +24,7 @@
 #include "TGraphErrors.h"
 #include "TGraph.h"
 #include "TGaxis.h"
-#include </afs/ihep.ac.cn/users/s/shiyk/YukunToolBox/Root.h>
+// #include </afs/ihep.ac.cn/users/s/shiyk/YukunToolBox/Root.h>
 //#include "Event.h"
 int layer,chip,channel;
 using namespace std;
@@ -34,14 +34,12 @@ Int_t main(int argc,char *argv[])
 {
     double start = clock();
     raw2Root tw;
-    tw.nCorrect(argv[1],argv[2],argv[3],argv[4],argv[5]);
+    tw.nCorrect(argv[1],argv[2],argv[3],argv[4]);
     double end = clock();
     cout<<"end of RawToRoot : Time : "<<(end-start)/CLOCKS_PER_SEC<<endl;
     return 0;
 }
-int raw2Root::nCorrect(string str_dat,string str_MIP,string str_SPE,string output_file,string mode){
-    //string str_root=find_datname(str_in);
-    //string str_out=outputDir+"/"+"cos_ana.root";
+int raw2Root::nCorrect(string str_dat,string str_MIP,string str_SPE,string output_file){
     TF1 *fcor=new TF1("fcor","-[0]*log(1-x/[0])",0,5000);
     fcor->SetParameter(0,n_pixel);
 
@@ -116,20 +114,21 @@ int raw2Root::nCorrect(string str_dat,string str_MIP,string str_SPE,string outpu
         cout<<"cant open "<<str_MIP<<endl;
         return 0;
     }
-    tree_in = (TTree*)fin->Get("sipm_gain");
+    tree_in = (TTree*)fin->Get("spe");
     if(!tree_in){
         cout<<"cant get sipm gain tree"<<endl;
         return 0;
     }
     tree_in->SetBranchAddress("cellid",&CellID);
-    tree_in->SetBranchAddress("gain_fm",&gain);
-    tree_in->SetBranchAddress("chi2_fm",&chi2);
-    tree_in->SetBranchAddress("ndf_fm",&ndf);
+    tree_in->SetBranchAddress("spe",&gain);
+    tree_in->SetBranchAddress("chi2",&chi2);
+    tree_in->SetBranchAddress("ndf",&ndf);
     for (int i = 0; i < tree_in->GetEntries(); ++i){
         tree_in->GetEntry(i);
         decode_cellid(CellID,layer,chip,channel);
         //MIP[layer][chip][channel]=MPV - ped_time[layer][chip][channel];
         SPE[layer][chip][channel]=gain;
+        cout<<gain<<endl;
         chi2_ndf[layer][chip][channel]=chi2/ndf;
         NDF[layer][chip][channel]=ndf;
         //cout<<layer<<" "<<chip<<" "<<channel<<" "<<MPV<<endl;
@@ -167,12 +166,7 @@ int raw2Root::nCorrect(string str_dat,string str_MIP,string str_SPE,string outpu
     }
     cout<<"Read TTree "<<endl;
     tree_in = (TTree*)fin->Get("EventTree");
-    if(mode=="Digi"){
-        ReadCalibTree(tree_in);
-    }
-    if(mode=="MC"){
-        ReadMCTree(tree_in);
-    }
+    ReadMCTree(tree_in);
     cout<<"Read TTree Over"<<endl;
     cout<<"Create outfile"<<endl;
     fout = TFile::Open(str_out.c_str(),"RECREATE");
@@ -196,8 +190,8 @@ int raw2Root::nCorrect(string str_dat,string str_MIP,string str_SPE,string outpu
     tree_out ->Branch("Event_Num",&t_Event_No);
     // tree_out ->Branch("DetectorID",&t_Detector_ID);
     tree_out ->Branch("CellID",&t_cellID);
-    tree_out ->Branch("Digi_Energy_HCAL",&t_Digi_Energy);
-    tree_out ->Branch("Digi_Hit_Energy",&t_Hit_E);
+    tree_out ->Branch("Energy_HCAL",&t_Digi_Energy);
+    tree_out ->Branch("Hit_Energy",&t_Hit_E);
     tree_out ->Branch("Hit_X",&t_Hit_X);
     tree_out ->Branch("Hit_Y",&t_Hit_Y);
     tree_out ->Branch("Hit_Z",&t_Hit_Z);    
@@ -227,6 +221,8 @@ int raw2Root::nCorrect(string str_dat,string str_MIP,string str_SPE,string outpu
             layer=Hit_Z->at(i_hit)/30;
             inverse(Hit_X->at(i_hit),Hit_Y->at(i_hit),chip,channel);
             fcor->SetParameter(0,n_pixel*SPE[layer][chip][channel]*MIP_E/MIP[layer][chip][channel]);
+            // cout<<n_pixel<<"  "<<SPE[layer][chip][channel]<<"  "<<MIP_E<<"  "<<MIP[layer][chip][channel]<<endl;
+            // cout<<double(n_pixel)*SPE[layer][chip][channel]*MIP_E/MIP[layer][chip][channel]<<endl;
             ecorrect=fcor->Eval(Hit_E->at(i_hit));
             // cout<<Hit_E->at(i_hit)<<"  "<<ecorrect<<endl;
             t_Hit_E->push_back(ecorrect);

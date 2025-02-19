@@ -127,7 +127,7 @@ void raw2Root::ReadMCTree(TTree *tree)
     Reset();
     // tree ->SetBranchAddress("Run_Num",&_Run_No);
     // tree ->SetBranchAddress("Event_Time",&_Event_Time);
-    tree->SetBranchAddress("EventNum", &_Event_No);
+    // tree->SetBranchAddress("Event_Num", &_Event_No);
     // tree ->SetBranchAddress("DetectorID",&_Detector_ID);
     tree->SetBranchAddress("CellID", &cellID);
     tree->SetBranchAddress("Hit_Energy", &Hit_E);

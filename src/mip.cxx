@@ -56,6 +56,7 @@ int raw2Root::MIPlist(const string _list){
         }
     }
     tout=new TTree("mip","mip");
+    TH2I *hitmap = new TH2I("hitmap", "hitmap", 18, -360, 360, 18, -360, 360);
     double MPV=0,width=0,gaus_sigma=0,max_x=0,FWHM=0;
     double _MPV[40][9][36],_width[40][9][36],_gaus_sigma[40][9][36],_max_x[40][9][36],_FWHM[40][9][36];
     std::fill(_MPV[0][0],_MPV[0][0]+12960,0);
@@ -80,8 +81,13 @@ int raw2Root::MIPlist(const string _list){
             tin->GetEntry(n);
             if(MIP(cellID,Hit_E)){
                 for(int i=0;i<cellID->size();i++){
-                    if(cellID->at(i)/100%100==0)
-                        mmip[cellID->at(i)]->Fill(Hit_E->at(i));
+                    int cid=cellID->at(i);
+                    if(cid/100%100==0){
+                        mmip[cid]->Fill(Hit_E->at(i));
+                        double x=Pos_X_1(cid);
+                        double y=Pos_Y_1(cid);
+                        hitmap->Fill(x,y);
+                    }
                 }
             }
         }    
@@ -104,8 +110,8 @@ int raw2Root::MIPlist(const string _list){
                     continue;
                 }
                 fr[0] = 0.25;fr[1] = 1;
-                pllo[0] = 0;  pllo[1] = 0.3; pllo[2] = 0.5; pllo[3] = 0;
-                plhi[0] = 0.5;plhi[1] = 0.55;plhi[2] = 5000;plhi[3] = 0.5;
+                pllo[0] = 0;  pllo[1] = 0.4; pllo[2] = 0.5; pllo[3] = 0;
+                plhi[0] = 0.5;plhi[1] = 0.5;plhi[2] = 5000;plhi[3] = 0.5;
                 sv[0] = 0.02; sv[1] = 0.461; sv[2] = 100;   sv[3] = 0.01;
         g_mutex.lock();
                 langaufit(mmip[cellid], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
@@ -129,6 +135,7 @@ int raw2Root::MIPlist(const string _list){
         th[i].join();
     }
     fout->cd();
+    hitmap->Write();
     TString dir="histogram";
     fout->mkdir(dir);
     for(int layer=0;layer<40;layer++){

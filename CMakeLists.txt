@@ -46,6 +46,8 @@ add_executable(mip src/mip.cxx src/Tree.cxx)
 add_executable(ped src/pedestal.cxx src/Tree.cxx)
 add_executable(mipdata src/mipdata.cxx src/Tree.cxx)
 add_executable(disp src/disp.cxx)
+add_executable(disp2d src/disp2d.cxx)
+add_executable(decode src/decode.cxx)
 #link libraries
 target_link_libraries(Calib ${ROOT_LIBRARIES})
 target_link_libraries(digi ${ROOT_LIBRARIES})
@@ -59,6 +61,8 @@ target_link_libraries(temp_correct ${ROOT_LIBRARIES} HBase)
 # target_link_libraries(analysev2 ${ROOT_LIBRARIES} Select HBase)
 target_link_libraries(maxEnCell ${ROOT_LIBRARIES} Select HBase)
 target_link_libraries(disp ${ROOT_LIBRARIES})
+target_link_libraries(disp2d ${ROOT_LIBRARIES})
+target_link_libraries(decode ${ROOT_LIBRARIES})
 
 #Add scripts to make setup.sh to include hbuana into environment
 # execute_process(COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/config/setup.sh ${PROJECT_BINARY_DIR})

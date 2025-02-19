@@ -24,7 +24,7 @@
 #include "TGraphErrors.h"
 #include "TGraph.h"
 #include "TGaxis.h"
-#include </afs/ihep.ac.cn/users/s/shiyk/YukunToolBox/Root.h>
+// #include </afs/ihep.ac.cn/users/s/shiyk/YukunToolBox/Root.h>
 //#include "Event.h"
 int layer,chip,channel;
 using namespace std;

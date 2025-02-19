@@ -24,7 +24,7 @@
 #include "TGraphErrors.h"
 #include "TGraph.h"
 #include "TGaxis.h"
-#include </afs/ihep.ac.cn/users/s/shiyk/YukunToolBox/Root.h>
+// #include </afs/ihep.ac.cn/users/s/shiyk/YukunToolBox/Root.h>
 //#include "Event.h"
 int layer,chip,channel;
 using namespace std;
@@ -48,6 +48,7 @@ int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string st
     double ped_charge[Layer_No][chip_No][channel_No];
     double gain_ratio[Layer_No][chip_No][channel_No];
     double gain_plat[Layer_No][chip_No][channel_No];
+    double gain_intercept[Layer_No][chip_No][channel_No];
     double MIP[Layer_No][chip_No][channel_No];
     double hitE,hitE_layer[Layer_No],hitNo_layer[Layer_No];
     double Edep=0;
@@ -55,15 +56,18 @@ int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string st
     double SwitchPoint=500;
     const double ref_ped_time=390;
     const double ref_ped_charge=384;
-    const double ref_MIP=900;
+    const double ref_MIP=344.3;
     const double ref_gain_ratio=26;
     const int lowgain_plat=2000;
     int Select_EventNo=0;
     int HitNo=0;
     int CellID=0;
     float slope=0;
-    double MPV=0;
-    float plat=0;
+    float intercept = 0;
+    double MPV = 0;
+    int entries = 0;
+    int Tag = 0;
+    float plat = 0;
     double pedestal_time=0;
     double pedestal_charge=0;
     double Layer_E[Layer_No]={0};
@@ -126,13 +130,16 @@ int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string st
     tree_in->SetBranchAddress("cellid",&CellID);
     tree_in->SetBranchAddress("slope",&slope);
     tree_in->SetBranchAddress("plat",&plat);
+    // tree_in->SetBranchAddress("intercept",&intercept);
     for (int i = 0; i < tree_in->GetEntries(); ++i){
         tree_in->GetEntry(i);
         decode_cellid(CellID,layer,chip,channel);
         //cout<<layer<<" "<<chip<<" "<<channel<<" "<<slope<<" "<<endl;
         gain_ratio[layer][chip][channel]=slope;
         gain_plat[layer][chip][channel]=plat;
-        if(gain_ratio[layer][chip][channel]<10 ||gain_ratio[layer][chip][channel]>50)cout<<CellID<<" abnormal gain ratio "<<layer<<" "<<chip<<" "<<channel<<" "<<slope<<endl;
+        // gain_intercept[layer][chip][channel] = intercept;
+        if (gain_ratio[layer][chip][channel] < 10 || gain_ratio[layer][chip][channel] > 50)
+            cout << CellID << " abnormal gain ratio " << layer << " " << chip << " " << channel << " " << slope << endl;
     }
     tree_in->Delete();
     fin->Close();
@@ -149,15 +156,18 @@ int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string st
     }
     tree_in->SetBranchAddress("CellID",&CellID);
     tree_in->SetBranchAddress("MPV",&MPV);
-    //tree_in->SetBranchAddress("ID",&CellID);
+    tree_in->SetBranchAddress("Tag",&Tag);
     //tree_in->SetBranchAddress("mpv",&MPV);
     for (int i = 0; i < tree_in->GetEntries(); ++i){
         tree_in->GetEntry(i);
         decode_cellid(CellID,layer,chip,channel);
         //MIP[layer][chip][channel]=MPV - ped_time[layer][chip][channel];
         MIP[layer][chip][channel]=MPV;
-        //cout<<layer<<" "<<chip<<" "<<channel<<" "<<MPV<<endl;
-        if(MIP[layer][chip][channel]<200)cout<<"abnormal MIP "<<layer<<" "<<chip<<" "<<channel<<" "<<MPV<<endl;
+        if (Tag!=1)
+            MIP[layer][chip][channel] = ref_MIP;
+        // cout<<layer<<" "<<chip<<" "<<channel<<" "<<MPV<<endl;
+        if (MIP[layer][chip][channel] < 200)
+            cout << "abnormal MIP " << layer << " " << chip << " " << channel << " " << MPV << endl;
     }
     tree_in->Delete();
     fin->Close();
@@ -174,9 +184,11 @@ int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string st
     for (int i_layer = 0; i_layer < Layer_No; ++i_layer){
         for (int i_chip = 0; i_chip < chip_No; ++i_chip){
             for (int i_chan = 0; i_chan < channel_No; ++i_chan){
-                if(ped_time[i_layer][i_chip][i_chan]<0) ped_time[i_layer][i_chip][i_chan]=ref_ped_time;
+                // ped_time[i_layer][i_chip][i_chan] += gain_intercept[i_layer][i_chip][i_chan];
+                // ped_charge[i_layer][i_chip][i_chan] -= gain_intercept[i_layer][i_chip][i_chan]/gain_ratio[i_layer][i_chip][i_chan];
+                if (ped_time[i_layer][i_chip][i_chan] < 0)ped_time[i_layer][i_chip][i_chan] = ref_ped_time;
                 if(ped_charge[i_layer][i_chip][i_chan]<0) ped_charge[i_layer][i_chip][i_chan]=ref_ped_charge;
-                if(MIP[i_layer][i_chip][i_chan]<100) MIP[i_layer][i_chip][i_chan]=ref_MIP - ref_ped_time;
+                if(MIP[i_layer][i_chip][i_chan]<100) MIP[i_layer][i_chip][i_chan]=ref_MIP;
                 if(gain_ratio[i_layer][i_chip][i_chan]<0) gain_ratio[i_layer][i_chip][i_chan]=ref_gain_ratio;
                 //cout<<i_layer<<" "<<i_chip<<" "<<i_chan<<endl;
                 //cout<<ped_time[i_layer][i_chip][i_chan]<<" "<<ped_time[i_layer][i_chip][i_chan]<<" "<<MIP[i_layer][i_chip][i_chan]<<" "<<gain_ratio[i_layer][i_chip][i_chan]<<endl;
@@ -201,21 +213,28 @@ int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string st
             if((hitTag->at(i_hit))==0) continue;
             _cellID.push_back(cellID->at(i_hit));
             decode_cellid(cellID->at(i_hit),layer,chip,channel);
-            if( (HG_Charge->at(i_hit))-ped_time[layer][chip][channel] < gain_plat[layer][chip][channel]-SwitchPoint )hitE=( HG_Charge->at(i_hit) - ped_time[layer][chip][channel] )*MIP_E/MIP[layer][chip][channel];
-            // else{
-            //     if(LG_Charge->at(i_hit)<2000)
+            if( (HG_Charge->at(i_hit))-ped_time[layer][chip][channel] < gain_plat[layer][chip][channel]-SwitchPoint )
+            {
+                hitE=( HG_Charge->at(i_hit) - ped_time[layer][chip][channel] )*MIP_E/MIP[layer][chip][channel];
+            }
+            // else
+            // {
+            //     if(LG_Charge->at(i_hit)<800)
             //         hitE=( LG_Charge->at(i_hit) - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]*MIP_E/MIP[layer][chip][channel];
             //     else
-            //         hitE=( 2000 - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]*MIP_E/MIP[layer][chip][channel];
+            //     {
+            //         hitE = -100;
+            //         // hitE = (800 - ped_charge[layer][chip][channel]) * gain_ratio[layer][chip][channel] * MIP_E / MIP[layer][chip][channel];
+            //     }
             // } 
             else hitE=( LG_Charge->at(i_hit) - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]*MIP_E/MIP[layer][chip][channel];
-            
             _Hit_E.push_back(hitE);
             _Hit_X.push_back(Pos_X(channel,chip));
             _Hit_Y.push_back(Pos_Y(channel,chip));
             _Hit_Z.push_back(layer*30);
-            _Hit_Time.push_back(Hit_Time->at(i_hit));
-            Edep+=hitE;
+            // _Hit_Time.push_back(Hit_Time->at(i_hit));
+            // cout << "test" << endl;
+            Edep += hitE;
             h2_HitMap->Fill(_Hit_X[i_hit],_Hit_Y[i_hit]);
             if(hitE>500*MIP_E){
                 cout<<hitE/MIP_E<<" high energy alert "<<layer<<" "<<chip<<" "<<channel<<endl;
