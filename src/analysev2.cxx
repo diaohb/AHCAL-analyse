@@ -58,7 +58,7 @@ int main(int argc,char* argv[]){
             if(a==0.5)hname="energy_500MeV";
             h[a]=new TH1D(hname,hname,10000,0,10000);
         }
-		hbase->ReadTree(tmp,"EventTree",mode);
+		hbase->ReadTree(tmp,"EventTree");
         int flag=0;
         for(int ientry=0;ientry<hbase->tin->GetEntries();ientry++){
             hbase->tin->GetEntry(ientry);

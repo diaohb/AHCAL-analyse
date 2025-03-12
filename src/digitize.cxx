@@ -367,11 +367,10 @@ int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string st
         {
             hitTag->push_back(1);
             int cid = cellID->at(i_hit);
-            decode_cellid(cid, layer, chip, channel);
             // cout<<cid<<" "<<layer<<" "<<chip<<" "<<channel<<endl;
             data_cellid->push_back(cid);
             double HG = 0, LG = 0;
-            digi(Hit_E->at(i_hit), HG, LG, cid);
+            digi(Hit_E->at(i_hit) , 0, HG, LG, cid);
             HG_Charge->push_back(HG);
             LG_Charge->push_back(LG);
             // h2_HitMap->Fill(Hit_X->at(i_hit)/40.3,Hit_Y->at(i_hit)/40.3);
@@ -388,8 +387,10 @@ int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string st
     cout << endl;
     return 1;
 }
-int raw2Root::digi(double energy, double &HG, double &LG, int cid)
+int raw2Root::digi(double energy, double sipm_energy, double &HG, double &LG, int cid)
 {
+    decode_cellid(cid, layer, chip, channel);
+    // energy += sipm_energy / 10 * 1e6 / 3.6 / _MIP[layer][chip][channel] * SPE[layer][chip][channel] * MIP_E;
     // nonuniform of Scintillators
     energy = gRandom->Gaus(energy, energy * 0.048);
     // energy = gRandom->Gaus(energy, energy * 0.048);
@@ -435,12 +436,13 @@ int raw2Root::digi(double energy, double &HG, double &LG, int cid)
     ////////////////////////////////////////////////////////////////////////////////////////
     // spe error
     double adc = n_fired * SPE[layer][chip][channel];
-    double adc_sigma = sqrt(n_fired) * 3; // Sigma[layer][chip][channel];
+    double adc_sigma = sqrt(n_fired) * 3*2; // Sigma[layer][chip][channel];
     // TODO
     adc = gRandom->Gaus(adc, adc_sigma);
     // ADC to HG LG
     HG = adc + gRandom->Gaus(ped_high[layer][chip][channel], rms_high[layer][chip][channel]);
-    LG = adc / gain_ratio[layer][chip][channel] + gRandom->Gaus(ped_low[layer][chip][channel], rms_low[layer][chip][channel]);
+    // HG = adc + gRandom->Gaus(ped_high[layer][chip][channel], 20);
+    LG = adc / gain_ratio[layer][chip][channel] + gRandom->Gaus(ped_low[layer][chip][channel], 10*rms_low[layer][chip][channel]);
     if (HG > gain_plat[layer][chip][channel])
     {
         HG = gain_plat[layer][chip][channel];

@@ -39,32 +39,31 @@ void HBase::ReadList(const string &_list)
 		}
 }
 
-void HBase::ReadTree(const TString &fname,const TString &tname,const string mode="digi")
+void HBase::ReadTree(const TString &fname,const TString &tname)
 {
 		cout<<"Reading file "<<fname<<endl;
 		fin = TFile::Open(TString(fname),"READ");
 		tin = (TTree*)fin->Get(TString(tname));
-		_Event_No=0;_detectorID=0;_cellID=0;_Digi_Hit_Energy=0;_Digi_Energy_ECAL=0;_Digi_Energy_HCAL=0;_Hit_Time=0;_Hit_X=0;_Hit_Y=0;_Hit_Z=0;
+		
 		// tin->SetBranchAddress("EventNum",&_Event_No);
 		// tin->SetBranchAddress("DetectorID",&_detectorID);
 		// tin->SetBranchAddress("CellID",&_cellID);
-		if(mode=="digi"){
-			tin->SetBranchAddress("Digi_Hit_Energy",&_Digi_Hit_Energy);
-		}
-		else if(mode=="mc"){
-			
-			tin->SetBranchAddress("Hit_Energy",&_Digi_Hit_Energy);
-		}
-		// tin->SetBranchAddress("Digi_Energy_ECAL",&_Digi_Energy_ECAL);
-		// tin->SetBranchAddress("Digi_Energy_HCAL",&_Digi_Energy_HCAL);
+		tin->SetBranchAddress("Hit_Energy",&Hit_Energy);
 		// tin->SetBranchAddress("Hit_Time",&_Hit_Time);
-		tin->SetBranchAddress("Hit_X",&_Hit_X);
-		tin->SetBranchAddress("Hit_Y",&_Hit_Y);
-		tin->SetBranchAddress("Hit_Z",&_Hit_Z);
+		tin->SetBranchAddress("Hit_X",&Hit_X);
+		tin->SetBranchAddress("Hit_Y",&Hit_Y);
+		tin->SetBranchAddress("Hit_Z", &Hit_Z);
+		// tin->SetBranchAddress("SiPM_Energy", &SiPM_Energy);
 }
 void HBase::Clear(){
-	_Digi_Hit_Energy->clear();
-	_Hit_X->clear();
-	_Hit_Y->clear();
-	_Hit_Z->clear();
+	Event_No = 0;
+	Energy_HCAL = 0;
+	if(cellID)cellID->clear();
+	if(detectorID)detectorID->clear();
+	if(Hit_Energy)Hit_Energy->clear();
+	if(Hit_Time)Hit_Time->clear();
+	if(Hit_X)Hit_X->clear();
+	if(Hit_Y)Hit_Y->clear();
+	if(Hit_Z)Hit_Z->clear();
+	if(SiPM_Energy)SiPM_Energy->clear();
 }

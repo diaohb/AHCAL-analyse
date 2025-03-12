@@ -33,7 +33,7 @@ int main(int argc,char* argv[]){
     }
 
     for_each(hbase->list.begin(),hbase->list.end(),[&](string tmp){
-		hbase->ReadTree(tmp,"EventTree","digi");
+		hbase->ReadTree(tmp,"EventTree");
         string s=tmp;
         s=s.substr(s.find_last_of('/')+1);
         TString fname="correct_"+TString(s);
@@ -71,20 +71,20 @@ int main(int argc,char* argv[]){
             _Hit_Y->clear();
             _Hit_Z->clear();
             _Digi_Energy_HCAL=0;      
-            for(int icell=0;icell<hbase->_Hit_X->size();icell++){
+            for(int icell=0;icell<hbase->Hit_X->size();icell++){
                 // _cellID->push_back(hbase->_cellID->at(icell));
                 // _Hit_Time->push_back(hbase->_Hit_Time->at(icell));
-                double x=hbase->_Hit_X->at(icell);
-                double y=hbase->_Hit_Y->at(icell);
+                double x=hbase->Hit_X->at(icell);
+                double y=hbase->Hit_Y->at(icell);
                 _Hit_X->push_back(x);
                 _Hit_Y->push_back(y);
-                _Hit_Z->push_back(hbase->_Hit_Z->at(icell));
+                _Hit_Z->push_back(hbase->Hit_Z->at(icell));
                 int j=(x+360)/40;
                 int i=(360-y)/40;
-                double e=hbase->_Digi_Hit_Energy->at(icell);
+                double e=hbase->Hit_Energy->at(icell);
                 // cout<<x<<" , "<<j<<"    "<<y<<" , "<<i<<endl;
                 double ee=e*f[i][j];
-                if(hbase->_Hit_Z->at(icell)<30&&x>-40&&x<0&&y>-40&&y>0)cout<<e<<"  "<<ee<<endl;
+                if(hbase->Hit_Z->at(icell)<30&&x>-40&&x<0&&y>-40&&y>0)cout<<e<<"  "<<ee<<endl;
                 _Digi_Hit_Energy->push_back(ee);
                 _Digi_Energy_HCAL+=ee;
                 // std::cout<<e<<" "<<_Digi_Energy_HCAL<<" "<<f[i][j]<<std::endl;

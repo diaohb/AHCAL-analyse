@@ -19,7 +19,7 @@ class HBase{
 
 		// protected:
 				//Protected member functions
-				virtual void ReadTree(const TString &fname,const TString &tname,const string mode); //Read TTree from ROOT files
+				virtual void ReadTree(const TString &fname,const TString &tname); //Read TTree from ROOT files
 				virtual void ReadList(const string &_list); // Read the file list and save to the protected vector
 				virtual void CreateFile(const TString &_outname); // Create output file
 				virtual void Init(const TString &_outname);// Initialize derived members
@@ -30,18 +30,17 @@ class HBase{
 				TTree *tin;	//Read Tree from fin
 				TFile *fout;	//Create output files
 				TTree *tout;	//Create output trees
-				int   _Event_No;
-				double _Digi_Energy_ECAL;
-				double _Digi_Energy_HCAL;
-				vector< int > *_detectorID;
-				vector< int > *_cellID;
-				vector< double > *_Digi_Hit_Energy;
-				vector< double > *_Hit_Time;
-				vector< double > *_Hit_X;
-				vector< double > *_Hit_Y;
-				vector< double > *_Hit_Z;
+				int   Event_No=0;
+				double Energy_HCAL=0;
+				vector< int > *detectorID=0;
+				vector< int > *cellID=0;
+				vector< double > *Hit_Energy=0;
+				vector< double > *Hit_Time=0;
+				vector< double > *Hit_X=0;
+				vector< double > *Hit_Y=0;
+				vector< double > *Hit_Z=0;
+				vector<double> *SiPM_Energy=0;
 				void Clear();
-
 };
 
 #endif

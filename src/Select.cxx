@@ -4,20 +4,22 @@
 using namespace std;
 Select::Select(vector<double>* _Hit_X,vector<double>* _Hit_Y,vector<double>* _Hit_Z, vector<double> *hit_energy,double a){
     // std::cout<<"Selection start"<<std::endl;
-    // CellID=cellID;
-    // copy(_Hit_X->begin(),_Hit_X->end(),Hit_X->begin());
-    // copy(_Hit_Y->begin(),_Hit_Y->end(),Hit_Y->begin());
-    // copy(_Hit_Z->begin(),_Hit_Z->end(),Hit_Z->begin());
-    // copy(hit_energy->begin(),hit_energy->end(),Hit_energy->begin());
+    beam_energy = a;
+    CellID = new vector<int>;
+    Hit_X = new vector<double>;
+    Hit_Y = new vector<double>;
+    Hit_Z = new vector<double>;
+    Hit_energy = new vector<double>;
+    CenterX = new vector<double>(40, 0);
+    CenterY = new vector<double>(40, 0);
+    max_energy = new vector<double>(40, 0);
+    max_x = new vector<double>(40, -500);
+    max_y = new vector<double>(40, -500);
+
     Hit_X->assign(_Hit_X->begin(), _Hit_X->end());
     Hit_Y->assign(_Hit_Y->begin(), _Hit_Y->end());
     Hit_Z->assign(_Hit_Z->begin(), _Hit_Z->end());
     Hit_energy->assign(hit_energy->begin(), hit_energy->end());
-    // Hit_X = new vector<double>(_Hit_X);
-    // Hit_Y=_Hit_Y;
-    // Hit_Z=_Hit_Z;
-    // Hit_energy=hit_energy;
-    beam_energy = a;
     Init();
 }
 Select::~Select(){
@@ -45,10 +47,15 @@ void Select::Init()
         int layer=Hit_Z->at(i)/30;
         int cellid = layer * 1e5 + chip * 1e4 + channel;
         CellID->push_back(cellid);
-        hitno++;
+        true_hitno++;
         layerhitno[layer]++;
         lenergy[layer]+=e;
     }
+    EnergyCenter();
+    RMS_zeta();
+    MaxEnergy();
+    E_Hit();
+    FD();
 }
 
 void Select::EnergyCenter(){
@@ -88,12 +95,11 @@ void Select::EnergyCenter(){
         {
             CenterX->at(layer) += Hit_X->at(i) * e;
             CenterY->at(layer) += Hit_Y->at(i) * e;
-            // int chip=0,channel=0;
-            // inverse(Hit_X->at(i),Hit_Y->at(i),chip,channel);
+            int chip=0,channel=0;
+            inverse(Hit_X->at(i),Hit_Y->at(i),chip,channel);
             int layer = Hit_Z->at(i) / 30;
-            // int cellid = layer * 1e5 + chip * 1e4 + channel;
-            // CellID->push_back(cellid);
-            // cout << "test4" << endl;
+            int cellid = layer * 1e5 + chip * 1e4 + channel;
+            CellID->push_back(cellid);
             hitno++;
             layerhitno[layer]++;
             lenergy[layer] += e;
@@ -102,33 +108,27 @@ void Select::EnergyCenter(){
     }
     for (int i = 0; i < 40; i++)
     {
-        if (lenergy[i] == 0)
+        tenergy += lenergy[i];
+        if (lenergy[i] > 0)
+        {
+            ishit[i] = 1;
+            hitlayer++;
+            CenterX->at(i) /= lenergy[i];
+            CenterY->at(i) /= lenergy[i];
+        }
+        else
         {
             CenterX->at(i) = -500;
             CenterY->at(i) = -500;
-            continue;
         }
-        CenterX->at(i) /= lenergy[i];
-        CenterY->at(i) /= lenergy[i];
     }
     for(int i=0;i<40;i++)
     {
-        tenergy+=lenergy[i];
-        if(lenergy[i]>0.5*MIP_E){
-            ishit[i]=1;
-            hitlayer++;
-        }
-    }
-    shower_start=0;
-    for(int i=0;i<40;i++)
-    {
-        // cout << i << "  " << ishit[i] << "  " << lenergy[i] << endl;
         if(layerhitno[i]>=4){
             shower_start=i;
             break;
         }
     }
-    shower_end=0;
     for(int i=37;i>=0;i--){
         if(layerhitno[i]>=4){
             shower_end=i;
@@ -174,9 +174,6 @@ void Select::MaxEnergy(){
 
 int Select::Result(double &total_energy,vector<double>* &layer_energy,vector<double>* &layer_hitno,int &_hitlayer,int &_hitno,int &_big_hitno)
 {
-    EnergyCenter();
-    RMS_zeta();
-    MaxEnergy();
     int flag_7 = 0;
     for (int i = 0; i < 20; i++)
     {
@@ -202,14 +199,6 @@ int Select::Result(double &total_energy,vector<double>* &layer_energy,vector<dou
         _hitno += layer_hitno->at(i);
         total_energy += layer_energy->at(i);
     }
-    // if(total_energy<1)
-    // {
-    //     for (int i = 0; i < 10; i++)
-    //     {
-    //         cout << lenergy[i] << "  ";
-    //     }
-    //     cout << endl;
-    // }
     if(total_energy<0.5*MIP_E){
         return 0;
     }
@@ -287,6 +276,44 @@ bool Select::Ishadron(){
     }
     return false;
 }
-void Select::Layerd(){
-    
+void Select::E_Hit(){
+    E_hit=0;
+    for(int i=0;i<Hit_energy->size();i++){
+        E_hit+=Hit_energy->at(i);
+    }
+    E_hit /= Hit_X->size();
+}
+void Select::FD(){
+    // fitter->SetFormula("pol1");
+    // fitter->StoreData(0);
+    fd = 0;
+    for (int i = 0; i < 9; i++)
+    {
+        alpha[i] = log(i+2);
+        R[i] = log(R_alpha(i+2));
+        fd+=R[i]/alpha[i];
+    }
+    alpha[9] = log(20);
+    R[9] = log(R_alpha(20));
+    fd+=R[9]/alpha[9];
+    fd/=10;
+    // fitter->AssignData(20, 1, alpha, R);
+    // fitter->Eval();
+    // fd = fitter->GetParameter(1);
+}
+double Select::R_alpha(int _alpha){
+    double R_alpha=0;
+    m_hit.clear();
+    double x = 0, y = 0;
+    if(_alpha%2==1){
+        x = 20, y = 20;
+    }
+    for (int i = 0; i < Hit_X->size(); i++)
+    {
+        int a = floor((Hit_X->at(i) - x + 20 * (_alpha - 1)) / 40 / _alpha);
+        int b = floor((Hit_Y->at(i) - x + 20 * (_alpha - 1)) / 40 / _alpha);
+        m_hit[int(Hit_Z->at(i) / 30) * 10000 + a * 100 + b] = 1;
+    }
+    R_alpha=true_hitno/double(m_hit.size());
+    return R_alpha;
 }

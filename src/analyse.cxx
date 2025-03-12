@@ -22,29 +22,10 @@ int main(int argc, char *argv[])
     string mode = "mc";
     bool isselect = true;
     string func = "cb";
-    for (int i = 2; i < argc; i++)
-    {
-        string s = argv[i];
-        if (s == "digi")
-        {
-            mode = "digi";
-            continue;
-        }
-        if (s == "no")
-        {
-            isselect = false;
-            continue;
-        }
-        if (s == "gaus")
-        {
-            func = "gaus";
-        }
-    }
     cout << "\e[44mmode: " << mode << " , selection: " << isselect << " , function: " << func << "\e[0m" << endl;
     TFile *fout = TFile::Open(s + "_analyse.root", "RECREATE");
-    TTree *tzprofile = new TTree("tzprofile", "tzprofile");
-    TTree *tfitEn = new TTree("tfitEn", "tfitEn");
-    double a;
+    TTree *tanalyse = new TTree("tanalyse", "tanalyse");
+    double beam_energy;
     double total_energy = 0;
     int event_no = 0;
     int hitlayer = 0;
@@ -53,18 +34,16 @@ int main(int argc, char *argv[])
     double zeta = 0;
     double rms = 0;
     int shower_start = 0;
+    int shower_end = 0;
     double f_15 = 0; // 15th, index=14
     double f_20 = 0;
-    int select_flag_l = 0;
+    int select_flag = 0;
+    double FD=0;
+    double E_Hit=0;
+    double R[10] = {0};
+
     vector<double> *layer_energy = 0;
     vector<double> *layer_hitno = 0;
-    // vector<double> *layer_energy_origin = 0;
-    // vector<double> *layer_energy_threshold = 0;
-    // vector<double> *layer_energy_hitno = 0;
-    // vector<double> *layer_energy_hitlayer = 0;
-    // vector<double> *layer_energy_showerstart = 0;
-    // vector<double> *layer_energy_lastratio = 0;
-    // vector<double> *layer_energy_straight = 0;
     vector<int> *layer = 0;
     vector<double> *layer_hit_x = 0;
     vector<double> *layer_hit_y = 0;
@@ -74,60 +53,33 @@ int main(int argc, char *argv[])
     vector<double> *layer_max_x =0 ;
     vector<double> *layer_max_y =0 ;
 
-    tzprofile->Branch("beam_energy", &a);
-    tzprofile->Branch("total_energy", &total_energy);
-    tzprofile->Branch("layer", &layer);
-    tzprofile->Branch("event_no", &event_no);
-    tzprofile->Branch("hitlayer", &hitlayer);
-    tzprofile->Branch("hitno", &hitno);
-    tzprofile->Branch("big_hitno", &big_hitno);
-    tzprofile->Branch("zeta", &zeta);
-    tzprofile->Branch("rms", &rms);
-    tzprofile->Branch("shower_start", &shower_start);
-    tzprofile->Branch("f_15", &f_15);
-    tzprofile->Branch("f_20", &f_20);
-    tzprofile->Branch("layer_energy", &layer_energy);
-    tzprofile->Branch("layer_hitno", &layer_hitno);
-    tzprofile->Branch("layer_hit_x", &layer_hit_x);
-    tzprofile->Branch("layer_hit_y", &layer_hit_y);
-    tzprofile->Branch("layer_max_energy", &layer_max_energy);
-    tzprofile->Branch("layer_max_x", &layer_max_x);
-    tzprofile->Branch("layer_max_y", &layer_max_y);
-    // tzprofile->Branch("layer_energy_origin",&layer_energy_origin);
-    // tzprofile->Branch("layer_energy_threshold",&layer_energy_threshold);
-    // tzprofile->Branch("layer_energy_hitno",&layer_energy_hitno);
-    // tzprofile->Branch("layer_energy_hitlayer",&layer_energy_hitlayer);
-    // tzprofile->Branch("layer_energy_showerstart",&layer_energy_showerstart);
-    // tzprofile->Branch("layer_energy_lastratio",&layer_energy_lastratio);
-    // tzprofile->Branch("layer_energy_straight",&layer_energy_straight);
-    tzprofile->Branch("select_flag", &select_flag_l);
-    tzprofile->Branch("cellid", &cellid);
-    tzprofile->Branch("hit_energy", &hit_energy);
+    tanalyse->Branch("beam_energy", &beam_energy);
+    tanalyse->Branch("total_energy", &total_energy);
+    tanalyse->Branch("layer", &layer);
+    tanalyse->Branch("event_no", &event_no);
+    tanalyse->Branch("hitlayer", &hitlayer);
+    tanalyse->Branch("hitno", &hitno);
+    tanalyse->Branch("big_hitno", &big_hitno);
+    tanalyse->Branch("zeta", &zeta);
+    tanalyse->Branch("rms", &rms);
+    tanalyse->Branch("shower_start", &shower_start);
+    tanalyse->Branch("shower_end", &shower_end);
+    tanalyse->Branch("f_15", &f_15);
+    tanalyse->Branch("f_20", &f_20);
+    tanalyse->Branch("layer_energy", &layer_energy);
+    tanalyse->Branch("layer_hitno", &layer_hitno);
+    tanalyse->Branch("layer_hit_x", &layer_hit_x);
+    tanalyse->Branch("layer_hit_y", &layer_hit_y);
+    tanalyse->Branch("layer_max_energy", &layer_max_energy);
+    tanalyse->Branch("layer_max_x", &layer_max_x);
+    tanalyse->Branch("layer_max_y", &layer_max_y);
+    tanalyse->Branch("select_flag", &select_flag);
+    tanalyse->Branch("cellid", &cellid);
+    tanalyse->Branch("hit_energy", &hit_energy);
+    tanalyse->Branch("FD", &FD);
+    tanalyse->Branch("E_Hit", &E_Hit);
+    tanalyse->Branch("R", &R, "R[10]/D");
 
-    double mean = 0;
-    double sigma = 0;
-    int select_flag = 0;
-    tfitEn->Branch("beam_energy", &a);
-    tfitEn->Branch("mean", &mean);
-    tfitEn->Branch("sigma", &sigma);
-    tfitEn->Branch("select_flag", &select_flag);
-    TF1 *f;
-    if (func == "gaus")
-    {
-        f = new TF1("f", "gaus", 0, 10000);
-    }
-    else if (func == "cb")
-    {
-        f = new TF1("f", "crystalball", 0, 10000);
-    }
-    vector<double> be;
-    unordered_map<double, TH1D *> h_origin;
-    unordered_map<double, TH1D *> h_threshold;
-    unordered_map<double, TH1D *> h_hitno;
-    unordered_map<double, TH1D *> h_hitlayer;
-    unordered_map<double, TH1D *> h_showerstart;
-    unordered_map<double, TH1D *> h_lastratio;
-    unordered_map<double, TH1D *> h_straight;
     for (int l = 0; l < 40; l++)
     {
         layer->push_back(l);
@@ -138,29 +90,16 @@ int main(int argc, char *argv[])
 		beamenergy = beamenergy.substr(0,beamenergy.find("eV")-1);
 		beamenergy = beamenergy.substr(beamenergy.rfind('/')+1);
         beamenergy = beamenergy.substr(beamenergy.rfind('_')+1);
-        a=stod(beamenergy);
-        if(a==500)a=0.5;
-        vector<double>::iterator it=find(be.begin(),be.end(),a);
-        if(it==be.end()){
-            be.push_back(a);
-            TString hname="energy_"+beamenergy+"GeV";
-            if(a==0.5)hname="energy_500MeV";
-            h_origin[a]=new TH1D(hname+"_origin",hname+"_origin",10000,0,10000);
-            h_threshold[a]=new TH1D(hname+"_threshold",hname+"_threshold",10000,0,10000);
-            h_hitno[a]=new TH1D(hname+"_hitno",hname+"_hitno",10000,0,10000);
-            h_hitlayer[a]=new TH1D(hname+"_hitlayer",hname+"_hitlayer",10000,0,10000);
-            h_showerstart[a]=new TH1D(hname+"_showerstart",hname+"_showerstart",10000,0,10000);
-            h_lastratio[a]=new TH1D(hname+"_lastratio",hname+"_lastratio",10000,0,10000);
-            h_straight[a]=new TH1D(hname+"_straight",hname+"_straight",10000,0,10000);
-        }
-		hbase->ReadTree(tmp,"EventTree",mode);
+        beam_energy=stod(beamenergy);
+        if(beam_energy==500)beam_energy=0.5;
+        hbase->Clear();
+		hbase->ReadTree(tmp,"EventTree");
+
         int flag[10]={0};
         for(int ientry=0;ientry<hbase->tin->GetEntries();ientry++){
-            hbase->Clear();
             hbase->tin->GetEntry(ientry);
+
             event_no=ientry;
-            double totalenergy=0;
-            // layer->clear();
             layer_energy->clear();
             layer_hitno->clear();
             layer_hit_x->clear();
@@ -170,150 +109,40 @@ int main(int argc, char *argv[])
             layer_max_y->clear();
             cellid->clear();
             hit_energy->clear();
-            // if (hbase->_Hit_X->size()>200){
-            // //     continue;
-            // cout<<hbase->_Hit_X->size()<<endl;
+            f_15=0;
+            f_20=0;
+            // for (int i_hit = 0;i_hit<hbase->Hit_Energy->size();i_hit++){
+            //     hbase->Hit_Energy->at(i_hit) += hbase->SiPM_Energy->at(i_hit)/10 * 1e6 / 3.6 /12 *0.461;
             // }
-            Select select(hbase->_Hit_X, hbase->_Hit_Y, hbase->_Hit_Z, hbase->_Digi_Hit_Energy, a);
+
+            Select select(hbase->Hit_X, hbase->Hit_Y, hbase->Hit_Z, hbase->Hit_Energy, beam_energy);
             int result = select.Result(total_energy, layer_energy, layer_hitno, hitlayer, hitno, big_hitno);
 
             zeta = select.GetZeta();
             rms = select.GetRMS();
-            // cout << rms << endl;
+            FD = select.GetFD();
+            E_Hit = select.GetE_Hit();
+            select.GetR_alpha(R);
             shower_start = select.GetShower_Start();
+            shower_end = select.GetShower_End();
             select.GetCenter(layer_hit_x, layer_hit_y);
             select.GetHitEnergy(cellid, hit_energy);
             select.GetMax(layer_max_energy, layer_max_x, layer_max_y);
             flag[result]++;
-            select_flag_l = result;
-            if (result == 7)
-            {
-                tzprofile->Fill();  
-                continue;
+            select_flag = result;
+            if(result!=7){
+                f_15=layer_energy->at(14)/total_energy;
+                f_20=layer_energy->at(19)/total_energy;
             }
-            f_15=layer_energy->at(14)/total_energy;
-            f_20=layer_energy->at(19)/total_energy;
-            h_origin[a]->Fill(total_energy);
-            if(result>=1){
-                h_threshold[a]->Fill(total_energy);
-            }
-            if(result>=2){
-                h_hitno[a]->Fill(total_energy);
-            }
-            if(result>=3){
-                h_hitlayer[a]->Fill(total_energy);
-            }
-            if(result>=4){
-                h_showerstart[a]->Fill(total_energy);
-            }
-            if(result>=5){
-                h_lastratio[a]->Fill(total_energy);
-            }
-            if(result==6){
-                h_straight[a]->Fill(total_energy);
-            }
-            tzprofile->Fill();
+            tanalyse->Fill();
         }
-        cout<<"----------------------------------------------\e[45m"<<a<<"GeV\e[0m----------------------------------------------------"<<endl;
+        cout<<"----------------------------------------------\e[45m"<<beam_energy<<"GeV\e[0m----------------------------------------------------"<<endl;
         if(isselect==true)cout<<"\e[44mcorner: "<<flag[7]<<"  <0.5MIP: "<<flag[0]<<"  hitno: "<<flag[1]<<"  hitlayer: "<<flag[2]<<"  s start: "<<flag[3]<<"  lastratio: "<<flag[4]<<"  n straight: "<<flag[5]<<"  preshower: "<<flag[8]<<"  hadron: "<<flag[9]<<"  ramain: "<<flag[6]<<"  total eneries: "<<hbase->tin->GetEntries()<<"\e[0m"<<endl;
         cout<<"--------------------------------------------------------------------------------------------------------"<<endl;
         hbase->fin->Close(); });
-    auto fsave = [&](unordered_map<double, TH1D *> h)
-    {for(int i=0;i<be.size();i++){
-        a=be.at(i);
-        TH1D *htmp=h[a];
-        mean=htmp->GetMean();
-        sigma=htmp->GetRMS();
-        double fs=mean-2*sigma;
-        // if(fs<0)fs==5
-        if(mean>4*fs)fs=mean/4;
-        f->SetParameter("Mean",mean);
-        f->SetParameter("Sigma",sigma);
-        if(func=="cb"){
-            f->SetParameter("Alpha",1);
-            f->SetParameter("N",1);
-            double y=htmp->GetBinContent(htmp->FindBin(mean));
-            f->SetParLimits(0,y-100,y*5);       //constant
-            f->SetParLimits(1,mean-sigma,mean+3*sigma);//mean
-            f->SetParLimits(2,mean/120,sigma);   //sigma
-            f->SetParLimits(3,-2,2);   //alpha
-            f->SetParLimits(4,0.5,100);  //N
-            fs=mean/1.5;
-        }
-        if(a<=2&&fs<0){fs=0;}
-        htmp->Fit(f,"q","",fs,mean+2*sigma);
-        mean=f->GetParameter("Mean");
-        sigma=f->GetParameter("Sigma");
-        if(func=="cb"){
-            double y=htmp->GetBinContent(htmp->FindBin(mean));
-            f->SetParLimits(0,y-100,y*5);       //constant
-            f->SetParLimits(1,mean-sigma,mean+3*sigma);//mean
-            f->SetParLimits(2,mean/120,sigma);   //sigma
-            f->SetParLimits(3,-3,3);   //alpha
-            f->SetParLimits(4,0.5,100);  //N
-        }
-        fs=mean-2*sigma;
-        if(mean>4*fs)fs=mean/4;
-        if(func=="cb"){
-            fs=mean/2;
-        }
-        if(a<=2&&fs<0){fs=0;}
-        htmp->Fit(f,"q","",fs,mean+2*sigma);
-        mean=f->GetParameter("Mean");
-        sigma=f->GetParameter("Sigma");
-        fs=mean-2*sigma;
-        if(mean>4*fs)fs=mean/4;
-        if(func=="cb"){
-            fs=mean/1.5;
-        }
-        if(a<=2&&fs<0){fs=0;}
-        htmp->Fit(f,"q","",fs,mean+2*sigma);
-        mean=f->GetParameter("Mean");
-        sigma=f->GetParameter("Sigma");
-        // if(func=="cb"){
-            // double n=f->GetParameter("N");
-            // double alpha=f->GetParameter("Alpha");
-            // double constant=f->GetParameter("Constant");
-            // if(alpha<1.177){
-            //     // double fwhm=sigma+1;
-            // }
-        // }
-        tfitEn->Fill();
-        htmp->Write();
-    } };
-    fout->mkdir("origin");
-    fout->cd("origin");
-    select_flag = 0;
-    fsave(h_origin);
-    if (isselect == true)
-    {
-        fout->mkdir("threshold");
-        fout->cd("threshold");
-        select_flag = 1;
-        fsave(h_threshold);
-        fout->mkdir("hitno");
-        fout->cd("hitno");
-        select_flag = 2;
-        fsave(h_hitno);
-        fout->mkdir("hitlayer");
-        fout->cd("hitlayer");
-        select_flag = 3;
-        fsave(h_hitlayer);
-        fout->mkdir("showerstart");
-        fout->cd("showerstart");
-        select_flag = 4;
-        fsave(h_showerstart);
-        fout->mkdir("lastratio");
-        fout->cd("lastratio");
-        select_flag = 5;
-        fsave(h_lastratio);
-        fout->mkdir("straight");
-        fout->cd("straight");
-        select_flag = 6;
-        fsave(h_straight);
-    }
+
     fout->cd();
-    tzprofile->Write();
-    tfitEn->Write();
-    // fout->Write();
+    tanalyse->Write("", TObject::kOverwrite);
+    fout->Close();
+    return 1;
 }

@@ -47,7 +47,7 @@ int main(int argc,char* argv[]){
         beamenergy = beamenergy.substr(beamenergy.rfind('_')+1);
         a=stoi(beamenergy);
         if(a==500)a=0.5;
-		hbase->ReadTree(tmp,"EventTree",mode);
+		hbase->ReadTree(tmp,"EventTree");
         int flag=0;
         for(int ientry=0;ientry<hbase->tin->GetEntries();ientry++){
             hbase->tin->GetEntry(ientry);
@@ -64,7 +64,7 @@ int main(int argc,char* argv[]){
             int hitlayer=0;
             int hitno=0;
             int big_hitno=0;
-            Select *select =new Select(hbase->_Hit_X,hbase->_Hit_Y,hbase->_Hit_Z,hbase->_Digi_Hit_Energy,a);
+            Select *select =new Select(hbase->Hit_X,hbase->Hit_Y,hbase->Hit_Z,hbase->Hit_Energy,a);
             if(select->Result(totalenergy,layer_energy,layer_hitno,hitlayer,hitno,big_hitno)!=6){
                 flag++;
                 continue;
@@ -72,14 +72,14 @@ int main(int argc,char* argv[]){
             event_no=ientry;
             fill(energy.begin(),energy.end(),0);
             fill(neighbor.begin(),neighbor.end(),vector<double>(8,0));
-            for(int icell=0;icell<hbase->_Digi_Hit_Energy->size();icell++){
+            for(int icell=0;icell<hbase->Hit_Energy->size();icell++){
                 auto minp=min_element(energy.begin(),energy.end());
-                double tmp=hbase->_Digi_Hit_Energy->at(icell);
+                double tmp=hbase->Hit_Energy->at(icell);
                 if(*minp<tmp){
                     *minp=tmp;
-                    double x=hbase->_Hit_X->at(icell);
-                    double y=hbase->_Hit_Y->at(icell);
-                    double z=hbase->_Hit_Z->at(icell);
+                    double x=hbase->Hit_X->at(icell);
+                    double y=hbase->Hit_Y->at(icell);
+                    double z=hbase->Hit_Z->at(icell);
                     int layer=z/30;
                     int chip=0,channel=0;
                     inverse(x,y,chip,channel);
@@ -105,10 +105,10 @@ int main(int argc,char* argv[]){
                     }
                 }
             }
-            for(int icell=0;icell<hbase->_Hit_X->size();icell++){
-                double x=hbase->_Hit_X->at(icell);
-                double y=hbase->_Hit_Y->at(icell);
-                double z=hbase->_Hit_Z->at(icell);
+            for(int icell=0;icell<hbase->Hit_X->size();icell++){
+                double x=hbase->Hit_X->at(icell);
+                double y=hbase->Hit_Y->at(icell);
+                double z=hbase->Hit_Z->at(icell);
                 int layer=z/30;
                 int chip=0,channel=0;
                 inverse(x,y,chip,channel);
@@ -122,7 +122,7 @@ int main(int argc,char* argv[]){
                     if(pos==4)continue;
                     if(pos>=5)pos--;
                     // cout<<pos<<endl;
-                    if(pos>=0&&pos<=7)neighbor[i][pos]=hbase->_Digi_Hit_Energy->at(icell);
+                    if(pos>=0&&pos<=7)neighbor[i][pos]=hbase->Hit_Energy->at(icell);
                     // if(deltaX==1&&deltaY==1)neighbor[i][0]=hbase->_Digi_Hit_Energy->at(icell);
                     // if(deltaX==1&&deltaY==0)neighbor[i][1]=hbase->_Digi_Hit_Energy->at(icell);
                     // if(deltaX==1&&deltaY==-1)neighbor[i][2]=hbase->_Digi_Hit_Energy->at(icell);

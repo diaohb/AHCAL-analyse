@@ -68,7 +68,7 @@ int raw2Root::MIPlist(const string _list, string pedestal)
     }
 
     fout = TFile::Open(TString(_list) + "_mip.root", "recreate");
-    fout_noise = TFile::Open(TString(_list) + "_noise.root", "recreate");
+    // fout_noise = TFile::Open(TString(_list) + "_noise.root", "recreate");
     unordered_map<int, TH1D *> mmip;
     unordered_map<int, TH1D *> mnoise;
     unordered_map<int, TH1D *> mmip_chip;
@@ -92,12 +92,12 @@ int raw2Root::MIPlist(const string _list, string pedestal)
         }
     }
     tout = new TTree("MIP_Calibration", "MIP_Calibration");
-    tout_noise = new TTree("Noise", "Noise");
+    // tout_noise = new TTree("Noise", "Noise");
     double MPV = 0, width = 0, gaus_sigma = 0, max_x = 0, FWHM = 0, chi2_ndf=0;
     int cellid = 0, entries = 0;
     int tag = 0;
-    int hitno = 0;
-    int _hitno[40][9][36];
+    // int hitno = 0;
+    // int _hitno[40][9][36];
 
     vector<int> *noise_cellid = new vector<int>;
     vector<double> *noise_hit = new vector<double>;
@@ -110,8 +110,8 @@ int raw2Root::MIPlist(const string _list, string pedestal)
     tout->Branch("FWHM", &FWHM);
     tout->Branch("chi2_ndf", &chi2_ndf);
     tout->Branch("Tag", &tag);
-    tout_noise->Branch("CellID", &cellid);
-    tout_noise->Branch("hitno", &hitno);
+    // tout_noise->Branch("CellID", &cellid);
+    // tout_noise->Branch("hitno", &hitno);
 
     TH2I *hitmap = new TH2I("hitmap", "hitmap", 18, -360, 360, 18, -360, 360);
     TTree *tout_run = new TTree("efficiency", "efficiency");
@@ -169,6 +169,7 @@ int raw2Root::MIPlist(const string _list, string pedestal)
         fin->Close(); });
     TString dir = "histogram";
     fout->mkdir(dir);
+    fout->mkdir("noise");
     double fr[2];
     double sv[4], pllo[4], plhi[4], fps[4], fpe[4];
     double chisqr;
@@ -180,9 +181,16 @@ int raw2Root::MIPlist(const string _list, string pedestal)
         TString slayer = "layer" + TString(to_string(layer).c_str());
         cout << "fitting " << slayer << " ..." << endl;
         fout->mkdir(dir + "/" + slayer);
+        fout->mkdir("noise/" + slayer);
         for (int chip = 0; chip < 9; chip++)
         {
             TString schip = "chip" + TString(to_string(chip).c_str());
+            fout->mkdir("noise/" + slayer + "/" + schip);
+            fout->cd("noise/" + slayer + "/" + schip);
+            for (int channel = 0;channel < 36; channel++){
+                mnoise[layer * 1e5 + chip * 1e4 + channel]->Write();
+            }
+
             fout->mkdir(dir + "/" + slayer + "/" + schip);
             fout->cd(dir + "/" + slayer + "/" + schip);
             fr[0] = 150;
@@ -291,8 +299,8 @@ int raw2Root::MIPlist(const string _list, string pedestal)
     // }
     fout->cd();
     hitmap->Write();
-    tout_run->Write();
-    tout->Write();
+    tout_run->Write("", TObject::kOverwrite);
+    tout->Write("", TObject::kOverwrite);
     fout->Close();
     return 1;
 }
@@ -309,12 +317,33 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
             i--;
         }
     }
-    int layerlen[40] = {0};
     int l = _cellid->size();
     // cout<<l<<endl;
     if (l < 30)
         return 0;
+    double hit_x = 0, hit_y = 0;
     for (int i = 0; i < l; i++)
+    {
+        int cid = _cellid->at(i);
+        hit_x += Pos_X_1(cid);
+        hit_y += Pos_Y_1(cid);
+    }
+    hit_x /= l;
+    hit_y /= l;
+    for (int i = 0; i < _cellid->size(); i++)
+    {
+        int cid = _cellid->at(i);
+        if (abs(Pos_X_1(cid) - hit_x) > 60 || abs(Pos_Y_1(cid) - hit_y) > 60)
+        {
+            noise_cellid->push_back(cid);
+            noise_hit->push_back(highgain->at(i));
+            _cellid->erase(_cellid->begin() + i);
+            highgain->erase(highgain->begin() + i);
+            i--;
+        }
+    }
+    int layerlen[40] = {0};
+    for (int i = 0; i < _cellid->size(); i++)
     {
         int layer = _cellid->at(i) / 100000;
         layerlen[layer]++;
@@ -334,27 +363,6 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
     }
     if (hitlayer < 30)
         return 0;
-    double hit_x = 0, hit_y = 0;
-    for (int i = 0; i < l; i++)
-    {
-        int cid = _cellid->at(i);
-        hit_x += Pos_X_1(cid);
-        hit_y += Pos_Y_1(cid);
-    }
-    hit_x /= l;
-    hit_y /= l;
-    for (int i = 0; i < _cellid->size(); i++)
-    {
-        int cid = _cellid->at(i);
-        if (abs(Pos_X_1(cid) - hit_x) > 41 || abs(Pos_Y_1(cid) - hit_y) > 41)
-        {
-            noise_cellid->push_back(cid);
-            noise_hit->push_back(highgain->at(i));
-            _cellid->erase(_cellid->begin() + i);
-            highgain->erase(highgain->begin() + i);
-            i--;
-        }
-    }
     int flag03=0,flag358=0;
     int cid0=0,cid38=0;
     // int h0=0,h38=0;

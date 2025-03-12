@@ -109,19 +109,6 @@ void raw2Root::ReadCalibTree(TTree *tree)
     tree->SetBranchAddress("Hit_Time", &Hit_Time);
     // tree ->SetBranchAddress("Cherenkov",&cherenkov);
 }
-// void raw2Root::ReadMCTree(TTree *tree){
-//    Reset();
-//    tree->SetBranchAddress("EventNum",&_Event_No);
-//    tree->SetBranchAddress("CellID",&cellID);
-//    tree->SetBranchAddress("Hit_X",&Hit_X);
-//    tree->SetBranchAddress("Hit_Energy",&Hit_E);
-//    tree->SetBranchAddress("Hit_Time",&Hit_Time);
-//    //tree->SetBranchAddress("EvtID",&_Event_No);
-//    //tree->SetBranchAddress("vecHcalCellID",&cellID);
-//    //tree->SetBranchAddress("vecHcalVisibleEdepCell",&Hit_E);
-//    //tree->SetBranchAddress("vecHcalHitTimeCell",&Hit_Time);
-// }
-
 void raw2Root::ReadMCTree(TTree *tree)
 {
     Reset();
@@ -136,6 +123,8 @@ void raw2Root::ReadMCTree(TTree *tree)
     tree->SetBranchAddress("Hit_Z", &Hit_Z);
     // tree ->SetBranchAddress("Digi_Energy_HCAL",&Digi_Energy);
     tree->SetBranchAddress("Hit_Time", &Hit_Time);
+    tree->SetBranchAddress("SiPM_Energy", &SiPM_Energy);
+    tree->SetBranchAddress("SiPM_Hit", &SiPM_Hit);
     // tree ->SetBranchAddress("Cherenkov",&cherenkov);
 }
 void raw2Root::SetDataTree(TTree *tree)
@@ -164,6 +153,8 @@ void raw2Root::CalibBranchClear()
     Hit_Z->clear();
     Hit_Time->clear();
     cherenkov->clear();
+    SiPM_Energy->clear();
+    SiPM_Hit->clear();
 }
 void raw2Root::BranchClear()
 {

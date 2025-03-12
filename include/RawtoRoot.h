@@ -47,7 +47,7 @@ public:
     int AnaBeam(string str_dat, string str_ped, string str_dac, string str_MIP, string output_file);
     int EnergyCalib(string str_dat, string str_ped, string str_dac, string str_MIP, string output_file);
     int Digitize(string str_dat, string str_ped, string str_dac, string str_MIP, string str_SPE, string str_lowgain_dac, string sipm_model, string output_file);
-    int digi(double energy, double &HG, double &LG, int i);
+    int digi(double energy, double sipm_energy, double &HG, double &LG, int i);
     int neEnergyCalib(string str_dat, string str_MIP, string output_file, string mode);
     int nCorrect(string str_dat, string str_MIP, string str_SPE, string output_file);
     int MCDigi(string str_dat, string str_ped, string str_dac, string str_MIP, string output_file);
@@ -103,10 +103,12 @@ private:
     vector<double> *HG_Charge = 0;
     vector<double> *LG_Charge = 0;
     vector<double> *Hit_Time = 0;
-    vector<double> *Hit_E;
-    vector<double> *Hit_X;
-    vector<double> *Hit_Y;
-    vector<double> *Hit_Z;
+    vector<double> *Hit_E=0;
+    vector<double> *Hit_X=0;
+    vector<double> *Hit_Y=0;
+    vector<double> *Hit_Z=0;
+    vector<double> *SiPM_Energy=0;
+    vector<double> *SiPM_Hit=0;
     vector<double> _temp;
     vector<string> list;
 };
