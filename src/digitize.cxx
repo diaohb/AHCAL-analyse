@@ -60,7 +60,7 @@ Int_t main(int argc, char *argv[])
     raw2Root tw;
     tw.Digitize(argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8]);
     double end = clock();
-    cout << "end of RawToRoot : Time : " << (end - start) / CLOCKS_PER_SEC << endl;
+    cout << "end of Digitization : Time : " << (end - start) / CLOCKS_PER_SEC << endl;
     return 0;
 }
 int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string str_MIP, string str_SPE, string str_lowgain_dac, string sipm_model, string output_file)
