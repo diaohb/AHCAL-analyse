@@ -436,13 +436,13 @@ int raw2Root::digi(double energy, double sipm_energy, double &HG, double &LG, in
     ////////////////////////////////////////////////////////////////////////////////////////
     // spe error
     double adc = n_fired * SPE[layer][chip][channel];
-    double adc_sigma = sqrt(n_fired) * 3; // Sigma[layer][chip][channel];
+    double adc_sigma = sqrt(n_fired) * 10; // Sigma[layer][chip][channel];
     // TODO
     adc = gRandom->Gaus(adc, adc_sigma);
     // ADC to HG LG
-    HG = adc + gRandom->Gaus(ped_high[layer][chip][channel], rms_high[layer][chip][channel]);
+    HG = adc + gRandom->Gaus(ped_high[layer][chip][channel], 1.5*rms_high[layer][chip][channel]);
     // HG = adc + gRandom->Gaus(ped_high[layer][chip][channel], 20);
-    LG = adc / gain_ratio[layer][chip][channel] + gRandom->Gaus(ped_low[layer][chip][channel], rms_low[layer][chip][channel]);
+    LG = adc / gain_ratio[layer][chip][channel] + gRandom->Gaus(ped_low[layer][chip][channel], 5*rms_low[layer][chip][channel]);
     if (HG > gain_plat[layer][chip][channel])
     {
         HG = gain_plat[layer][chip][channel];

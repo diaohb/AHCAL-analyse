@@ -118,13 +118,15 @@ int raw2Root::MIPlist(const string _list, string pedestal)
     int total_entries = 0, mip_flag = 0;
     int layer_hit[40] = {0};
     double hit_x = 0, hit_y = 0;
+    int noise_hitno = 0;
     // tout_run->Branch("total_entries", &total_entries);
     tout_run->Branch("mip", &mip_flag);
     tout_run->Branch("layer_hit", &layer_hit, "layer_hit[40]/I");
     tout_run->Branch("hit_x", &hit_x);
     tout_run->Branch("hit_y", &hit_y);
-    tout_run->Branch("CellID", &noise_cellid);
-    tout_run->Branch("noise_hit", &noise_hit);
+    // tout_run->Branch("CellID", &noise_cellid);
+    // tout_run->Branch("noise_hit", &noise_hit);
+    tout_run->Branch("noise_hitno", &noise_hitno);
     for_each(list.begin(), list.end(), [&](string tmp)
     {
         cout<<"Reading: "<<tmp<<endl;
@@ -163,6 +165,7 @@ int raw2Root::MIPlist(const string _list, string pedestal)
                     int cid = noise_cellid->at(i);
                     mnoise[cid]->Fill(noise_hit->at(i) - ped_high[cid]);
                 }
+                noise_hitno = noise_cellid->size();
             }
             tout_run->Fill();
         }

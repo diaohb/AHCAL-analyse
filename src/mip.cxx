@@ -79,7 +79,9 @@ int raw2Root::MIPlist(const string _list){
         ReadCalibTree(tin);
         for(int n=0;n<tin->GetEntries();n++){
             tin->GetEntry(n);
-            if(MIP(cellID,Hit_E)){
+            cout << MIP(cellID, Hit_E) << endl;
+            if (MIP(cellID, Hit_E))
+            {
                 for(int i=0;i<cellID->size();i++){
                     int cid=cellID->at(i);
                     if(cid/100%100==0){
@@ -113,9 +115,9 @@ int raw2Root::MIPlist(const string _list){
                 pllo[0] = 0;  pllo[1] = 0.4; pllo[2] = 0.5; pllo[3] = 0;
                 plhi[0] = 0.5;plhi[1] = 0.5;plhi[2] = 5000;plhi[3] = 0.5;
                 sv[0] = 0.02; sv[1] = 0.461; sv[2] = 100;   sv[3] = 0.01;
-        g_mutex.lock();
+        // g_mutex.lock();
                 langaufit(mmip[cellid], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
-        g_mutex.unlock();
+        // g_mutex.unlock();
                 double maxx=0,fwhm;
                 langaupro(fps,maxx,fwhm);
                 _max_x[layer][chip][channel]=maxx;
@@ -127,13 +129,16 @@ int raw2Root::MIPlist(const string _list){
         }
         printf("fitted layer %d\n",layer);
     };
-    thread th[40];
-    for(int i=0;i<40;i++){
-        th[i]=thread(ffit,i);
+    for(int i = 0; i < 40; i++){
+        ffit(i);
     }
-    for(int i=0;i<40;i++){
-        th[i].join();
-    }
+        // thread th[40];
+        // for(int i=0;i<40;i++){
+        //     th[i]=thread(ffit,i);
+        // }
+        // for(int i=0;i<40;i++){
+        //     th[i].join();
+        // }
     fout->cd();
     hitmap->Write();
     TString dir="histogram";

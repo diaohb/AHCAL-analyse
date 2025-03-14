@@ -32,10 +32,10 @@ int main(int argc,char *argv[]){
     raw2Root tw;
     tw.PEDlist(argv[1],argv[2]);
     double end = clock();
-    cout<<"end of mip : Time : "<<(end-start)/CLOCKS_PER_SEC<<endl;
+    cout<<"end of pedestal : Time : "<<(end-start)/CLOCKS_PER_SEC<<endl;
     return 0;
 }
-int raw2Root::PEDlist(const string _list, const bool ishittag){
+int raw2Root::PEDlist(const string _list, const string ishittag){
     ReadList(_list);
     TFile *fin,*fout;
     TTree *tin,*tout;
@@ -72,7 +72,7 @@ int raw2Root::PEDlist(const string _list, const bool ishittag){
             for(int i=0;i<cellID->size();i++){
                 cellid=cellID->at(i);
                 if(cellid/100%100!=0)continue;
-                if(ishittag==1&&hitTag->at(i)==1)continue;
+                if(ishittag=="1"&&hitTag->at(i)==1)continue;
                 mped_high[cellid]->Fill(HG_Charge->at(i));
                 mped_low[cellid]->Fill(LG_Charge->at(i));
             }
@@ -99,7 +99,7 @@ int raw2Root::PEDlist(const string _list, const bool ishittag){
                 fout->cd("highgain/"+slayer);
                 double mean=mped_high[cellid]->GetMean();
                 double sigma=mped_high[cellid]->GetRMS();
-                mped_high[cellid]->Fit(ffit,"q","",mean-1.5*sigma,mean+1.5*sigma);
+                mped_high[cellid]->Fit(ffit,"qL","",mean-2*sigma,mean+2*sigma);
                 highpeak=ffit->GetParameter(1);
                 highrms=ffit->GetParameter(2);
                 mped_high[cellid]->Write();
@@ -107,7 +107,7 @@ int raw2Root::PEDlist(const string _list, const bool ishittag){
                 fout->cd("lowgain/"+slayer);
                 mean=mped_low[cellid]->GetMean();
                 sigma=mped_low[cellid]->GetRMS();
-                mped_low[cellid]->Fit(ffit,"q","",mean-1.5*sigma,mean+1.5*sigma);
+                mped_low[cellid]->Fit(ffit,"qL","",mean-2*sigma,mean+2*sigma);
                 lowpeak=ffit->GetParameter(1);
                 lowrms=ffit->GetParameter(2);
                 mped_low[cellid]->Write();

@@ -66,7 +66,7 @@ public:
     int Chipbuffer_empty();
     int ReadList(const string _list);
     int MIPlist(const string _list);
-    int PEDlist(const string _list,const bool ishittag=0);
+    int PEDlist(const string _list,const string ishittag=0);
     int MIPlist(const string _list, string pedestal);
     int MIP(vector<int> *_cellid, vector<double> *_HG_Charge);
     int MIP(vector<int> *_cellid, vector<int> *hitTag);
