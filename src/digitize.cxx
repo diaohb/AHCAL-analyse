@@ -315,7 +315,7 @@ int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string st
                     n_good++;
                 }
             }
-			if(n_good!=0){
+			if(n_good != 0){
 				mean_gain /= n_good;
 			}
 			else{
