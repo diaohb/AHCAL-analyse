@@ -309,13 +309,18 @@ int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string st
                     gain_plat[i_layer][i_chip][i_chan] = ref_gain_plat;
                 if (Sigma[i_layer][i_chip][i_chan] < 0)
                     Sigma[i_layer][i_chip][i_chan] = ref_sigma;
-                if (chi2_ndf[layer][chip][channel] < 20 || NDF[layer][chip][channel] <= 3 || SPE[layer][chip][channel] < 15)
+                if (chi2_ndf[layer][chip][channel] < 20 || NDF[layer][chip][channel] > 3 || SPE[layer][chip][channel] >= 15)
                 {
                     mean_gain += SPE[layer][chip][channel];
                     n_good++;
                 }
             }
-            mean_gain /= n_good;
+			if(n_good!=0){
+				mean_gain /= n_good;
+			}
+			else{
+				mean_gain = ref_spe;
+			}
             for (int i_chan = 0; i_chan < channel_No; ++i_chan)
             {
                 if (chi2_ndf[layer][chip][channel] >= 20 || SPE[layer][chip][channel] < mean_gain - 5 || SPE[layer][chip][channel] > mean_gain + 5 || NDF[layer][chip][channel] <= 3 || SPE[layer][chip][channel] < 15)
