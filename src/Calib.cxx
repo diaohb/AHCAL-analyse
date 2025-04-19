@@ -14,8 +14,6 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
-// #include </afs/ihep.ac.cn/users/s/shiyk/YukunToolBox/Root.h>
-//#include "Event.h"
 int layer, chip, channel;
 using namespace std;
 char char_tmp[200];
@@ -28,8 +26,6 @@ Int_t main(int argc, char *argv[]) {
     return 0;
 }
 int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string str_MIP, string output_file) {
-    //string str_root=find_datname(str_in);
-    //string str_out=outputDir+"/"+"cos_ana.root";
     string str_out = output_file;
     TFile *fin, *fout;
     TTree *tree_in, *tree_out;
@@ -47,7 +43,7 @@ int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string
     const double ref_ped_charge = 384;
     const double ref_MIP = 344.3;
     const double ref_gain_ratio = 26;
-    const int lowgain_plat = 2000;
+    // const int lowgain_plat = 2000;
     int CellID = 0;
     float slope = 0;
     float intercept = 0;

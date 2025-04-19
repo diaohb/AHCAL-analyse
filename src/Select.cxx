@@ -1,6 +1,5 @@
 #include "Select.h"
 #include "Global.h"
-#include <iostream>
 using namespace std;
 Select::Select() {
     // std::cout<<"Selection start"<<std::endl;
