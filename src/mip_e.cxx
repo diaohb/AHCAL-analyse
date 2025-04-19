@@ -1,18 +1,15 @@
 #include "Global.h"
 #include "RawtoRoot.h"
 #include "TLegend.h"
-#include "TRandom.h"
 #include "langaus.h"
 #include <TF1.h>
 #include <TFile.h>
 #include <TH1.h>
-#include <TMath.h>
-#include <TROOT.h>
-#include <TSpectrum.h>
 #include <TStyle.h>
 #include <TSystem.h>
 #include <TTree.h>
 #include <algorithm>
+#include <fstream>
 #include <iostream>
 #include <mutex>
 #include <stdlib.h>
@@ -24,16 +21,17 @@ using namespace std;
 void fit(TH1D *his, Double_t *fitrange, Double_t *startvalues, Double_t *parlimitslo, Double_t *parlimitshi, Double_t *fitparams, Double_t *fiterrors, Double_t *ChiSqr, Int_t *NDF);
 int main(int argc, char *argv[]) {
     double start = clock();
+    cout << "start of mip_e" << endl;
     raw2Root tw;
     tw.MIPlist(argv[1], argv[2]);
     double end = clock();
-    cout << "end of mip : Time : " << (end - start) / CLOCKS_PER_SEC << endl;
+    cout << "end of mip_e : Time : " << (end - start) / CLOCKS_PER_SEC << endl;
     return 0;
 }
 int raw2Root::MIPlist(const string _list, string pedestal) {
     ReadList(_list);
-    TFile *fin, *fout, *fout_noise;
-    TTree *tin, *tout, *tout_noise;
+    TFile *fin, *fout;
+    TTree *tin, *tout;
     fin = TFile::Open(pedestal.c_str(), "READ");
     if (!fin) {
         cout << "cant open " << pedestal << endl;
@@ -45,7 +43,7 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
         return 0;
     }
     int CellID = 0;
-    double pedestal_high = 0, pedestal_low = 0;
+    double pedestal_high = 0;
     tin->SetBranchAddress("cellid", &CellID);
     tin->SetBranchAddress("highgain_peak", &pedestal_high);
     unordered_map<int, double> ped_high;
@@ -279,7 +277,8 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
     return 1;
 }
 int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *highgain, vector<int> *noise_cellid, vector<double> *noise_hit) {
-    for (int i = 0; i < _cellid->size(); i++) {
+    int i = 0;
+    for (i = 0; i < _cellid->size(); i++) {
         int cid = _cellid->at(i);
         if (hitTag->at(i) == 0 || (hitTag->at(i) && cid / 100 % 100 != 0)) {
             _cellid->erase(_cellid->begin() + i);
@@ -289,9 +288,6 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
         }
     }
     int l = _cellid->size();
-    // cout<<l<<endl;
-    if (l < 30)
-        return 0;
     double hit_x = 0, hit_y = 0;
     for (int i = 0; i < l; i++) {
         int cid = _cellid->at(i);
@@ -302,7 +298,7 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
     hit_y /= l;
     for (int i = 0; i < _cellid->size(); i++) {
         int cid = _cellid->at(i);
-        if (abs(Pos_X_1(cid) - hit_x) > 60 || abs(Pos_Y_1(cid) - hit_y) > 60) {
+        if (abs(Pos_X_1(cid) - hit_x) > 100 || abs(Pos_Y_1(cid) - hit_y) > 100) {
             noise_cellid->push_back(cid);
             noise_hit->push_back(highgain->at(i));
             _cellid->erase(_cellid->begin() + i);
@@ -311,43 +307,33 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
         }
     }
     int layerlen[40] = {0};
+    int hitno = 0;
     for (int i = 0; i < _cellid->size(); i++) {
         int layer = _cellid->at(i) / 100000;
         layerlen[layer]++;
+        hitno++;
     }
-    // for (int i = 0; i < 40; i++)
-    // {
-    //     if (layerlen[i] > 2)
-    //     {
-    //         return 0;
-    //     }
-    // }
     int hitlayer = 0;
     for (int i = 0; i < 40; i++) {
         if (layerlen[i])
             hitlayer++;
     }
-    if (hitlayer < 30)
+    if (hitno / double(hitlayer) < 2)
         return 0;
-    int flag03 = 0, flag358 = 0;
-    int cid0 = 0, cid38 = 0;
-    // int h0=0,h38=0;
-    for (int i = 0; i < _cellid->size(); i++) {
-        int cid = _cellid->at(i);
-        if (flag03 == 0 && int(cid / 1e5) <= 2) {
-            flag03++;
-            cid0 = cid % 100000;
-            // break;
-            // h0 = highgain->at(i);
-        }
-        if (flag358 == 0 && int(cid / 1e5) >= 35 && int(cid / 1e5) < 38) {
-            flag358++;
-            cid38 = cid % 100000;
-            // break;
-            // h38 = highgain->at(i);
+
+
+    for (i = 0; i < 40; i++) {
+        if (layerlen[i] > 2) break;
+    }
+
+    for (int j = 0; j < _cellid->size(); j++) {
+        int layer = _cellid->at(j) / 100000;
+        if (layer >= i) {
+            _cellid->erase(_cellid->begin() + j);
+            highgain->erase(highgain->begin() + j);
+            hitTag->erase(hitTag->begin() + j);
+            j--;
         }
     }
-    if (flag03 * flag358 == 0 || abs(Pos_X_1(cid0) - Pos_X_1(cid38)) > 41 || abs(Pos_Y_1(cid0) - Pos_Y_1(cid38)) > 41)
-        return -1;
     return 1;
 }

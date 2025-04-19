@@ -71,6 +71,7 @@ public:
     int MIP(vector<int> *_cellid, vector<double> *_HG_Charge);
     int MIP(vector<int> *_cellid, vector<int> *hitTag);
     int MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *_HG_Charge, vector<int> *noise_cellid, vector<double> *noise_hit);
+    int MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *_HG_Charge);
 
 private:
     //    Event* EventClass;

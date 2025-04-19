@@ -1,5 +1,5 @@
-#ifndef SELECT_HH
-#define SELECT_HH
+#ifndef SELECT_PI_HH
+#define SELECT_PI_HH
 #include <TF1.h>
 #include <TLinearFitter.h>
 #include <unordered_map>
@@ -37,7 +37,7 @@ public:
         layer_max_x->assign(max_x.begin(), max_x.end());
         layer_max_y->assign(max_y.begin(), max_y.end());
     }
-    void ResetEvent(vector<double> *_Hit_X, vector<double> *_Hit_Y, vector<double> *_Hit_Z, vector<double> *_Hit_Energy, double a, int _particleID = 1);
+    void ResetEvent(vector<double> *_Hit_X, vector<double> *_Hit_Y, vector<double> *_Hit_Z, vector<double> *_Hit_Energy, double a);
 
 private:
     void Init();
@@ -52,10 +52,6 @@ private:
     double R_alpha(int alpha);
 
     const double MIP_E = 0.461;//MeV
-    int particleID = 1;
-    int range[2] = {100, 360};
-    int shower_start_ref[2] = {10, 10};
-    int shower_end_ref[2] = {25, 35};
 
     vector<int> CellID;
     vector<double> Hit_X;
@@ -91,18 +87,10 @@ private:
     unordered_map<int, bool> m_hit;
     TF1 *fhitnocut = new TF1("fhitnocut", "372.285*(1-exp(-0.0064584*x))", 0, 350);
     // TF1 *fhitlayercut=new TF1("fhitlayercut","19.5*(1-exp(-0.0576*x))",0,350);
-    unordered_map<double, int> hitnocut_down[2] = {
-            {{0.5, 4}, {1, 7}, {2, 10}, {3, 12}, {4, 15}, {5, 20}, {10, 20}, {20, 60}, {30, 80}, {40, 100}, {50, 110}, {60, 120}, {70, 140}, {80, 150}, {100, 170}, {120, 200}, {150, 230}, {250, 320}},
-            {{1, 3}, {2, 8}, {3, 15}, {4, 20}, {5, 28}, {6, 33}, {7, 38}, {8, 40}, {10, 40}, {12, 50}, {15, 60}}};
-    unordered_map<double, int> hitnocut_up[2] = {
-            {{0.5, 14}, {1, 22}, {2, 33}, {3, 40}, {4, 48}, {5, 50}, {10, 20}, {20, 60}, {30, 80}, {40, 100}, {50, 110}, {60, 120}, {70, 140}, {80, 150}, {100, 170}, {120, 200}, {150, 230}, {250, 320}},
-            {{1, 31}, {2, 37}, {3, 50}, {4, 60}, {5, 70}, {6, 85}, {7, 95}, {8, 105}, {10, 120}, {12, 140}, {15, 160}}};
-    unordered_map<double, int> hitlayercut_down[2] = {
-            {{0.5, 4}, {1, 6}, {2, 8}, {3, 9}, {4, 10}, {5, 11}, {10, 10}, {20, 15}, {30, 15}, {40, 16}, {50, 17}, {60, 18}, {70, 18}, {80, 20}, {100, 20}, {120, 20}, {150, 20}, {250, 22}},
-            {{1, 2}, {2, 4}, {3, 6}, {4, 8}, {5, 10}, {6, 11}, {7, 12}, {8, 13}, {10, 14}, {12, 15}, {15, 16}}};
-    unordered_map<double, int> hitlayercut_up[2] = {
-            {{0.5, 10}, {1, 13}, {2, 16}, {3, 18}, {4, 19}, {5, 20}, {10, 10}, {20, 15}, {30, 15}, {40, 16}, {50, 17}, {60, 18}, {70, 18}, {80, 20}, {100, 20}, {120, 20}, {150, 20}, {250, 22}},
-            {{1, 40}, {2, 40}, {3, 40}, {4, 40}, {5, 40}, {6, 40}, {7, 40}, {8, 40}, {10, 40}, {12, 40}, {15, 40}}};
+    unordered_map<double, int> hitnocut_down = {{1, 4}, {2, 8}, {3, 12}, {4, 15}, {5, 20}, {10, 20}, {20, 60}, {30, 80}, {40, 100}, {50, 110}, {60, 120}, {70, 140}, {80, 150}, {100, 170}, {120, 200}, {150, 230}, {250, 320}};
+    unordered_map<double, int> hitnocut_up = {{1, 36}, {2, 46}, {3, 40}, {4, 48}, {5, 50}, {10, 20}, {20, 60}, {30, 80}, {40, 100}, {50, 110}, {60, 120}, {70, 140}, {80, 150}, {100, 170}, {120, 200}, {150, 230}, {250, 320}};
+    unordered_map<double, int> hitlayercut_down = {{1, 6}, {2, 8}, {3, 9}, {4, 10}, {5, 11}, {10, 10}, {20, 15}, {30, 15}, {40, 16}, {50, 17}, {60, 18}, {70, 18}, {80, 20}, {100, 20}, {120, 20}, {150, 20}, {250, 22}};
+    unordered_map<double, int> hitlayercut_up = {{1, 13}, {2, 16}, {3, 18}, {4, 19}, {5, 20}, {10, 10}, {20, 15}, {30, 15}, {40, 16}, {50, 17}, {60, 18}, {70, 18}, {80, 20}, {100, 20}, {120, 20}, {150, 20}, {250, 22}};
 };
 
 

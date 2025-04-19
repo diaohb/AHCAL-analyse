@@ -6,6 +6,8 @@
 #cmake minimum requirement
 cmake_minimum_required(VERSION 3.17)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 #Project name and version
 project ( compare VERSION 1.0.0 LANGUAGES C CXX )
@@ -29,7 +31,7 @@ include(${ROOT_USE_FILE})
 
 #Add static librarys
 add_library(HBase STATIC src/HBase.cxx)
-add_library(Select STATIC src/Select.cxx) 
+add_library(Select STATIC src/Select.cxx)
 add_library(PID_analyse STATIC src/PID_analyse.cxx) 
 # add_library(HBase_data STATIC src/HBase_data.cxx)
 
@@ -46,9 +48,12 @@ add_executable(analyse src/analyse.cxx)
 add_executable(mip src/mip.cxx src/Tree.cxx)
 add_executable(ped src/pedestal.cxx src/Tree.cxx)
 add_executable(mipdata src/mipdata.cxx src/Tree.cxx)
+add_executable(mipdata_split src/mipdata_split.cxx src/Tree.cxx)
+add_executable(mip_e src/mip_e.cxx src/Tree.cxx)
 add_executable(disp src/disp.cxx)
 add_executable(disp2d src/disp2d.cxx)
 add_executable(decode src/decode.cxx)
+add_executable(decode149 src/decode149.cxx)
 add_executable(pid src/PID.cxx)
 #link libraries
 target_link_libraries(Calib ${ROOT_LIBRARIES})
@@ -58,6 +63,8 @@ target_link_libraries(nCalib ${ROOT_LIBRARIES})
 target_link_libraries(mip ${ROOT_LIBRARIES})
 target_link_libraries(ped ${ROOT_LIBRARIES})
 target_link_libraries(mipdata ${ROOT_LIBRARIES})
+target_link_libraries(mipdata_split ${ROOT_LIBRARIES})
+target_link_libraries(mip_e ${ROOT_LIBRARIES})
 target_link_libraries(analyse ${ROOT_LIBRARIES} Select HBase)
 # target_link_libraries(temp_correct ${ROOT_LIBRARIES} HBase)
 # target_link_libraries(analysev2 ${ROOT_LIBRARIES} Select HBase)
@@ -66,6 +73,9 @@ target_link_libraries(disp ${ROOT_LIBRARIES})
 target_link_libraries(disp2d ${ROOT_LIBRARIES})
 target_link_libraries(decode ${ROOT_LIBRARIES})
 target_link_libraries(pid ${ROOT_LIBRARIES} HBase PID_analyse)
+target_link_libraries(Select ${ROOT_LIBRARIES})
+target_link_libraries(PID_analyse ${ROOT_LIBRARIES})
+target_link_libraries(decode149 ${ROOT_LIBRARIES})
 
 #Add scripts to make setup.sh to include hbuana into environment
 # execute_process(COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/config/setup.sh ${PROJECT_BINARY_DIR})

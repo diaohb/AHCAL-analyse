@@ -1,4 +1,4 @@
-#include "Select.h"
+#include "Select_pi.h"
 #include "Global.h"
 #include <iostream>
 using namespace std;
@@ -11,13 +11,12 @@ Select::~Select() {
 
     // cout<<"Selection done"<<endl;
 }
-void Select::ResetEvent(vector<double> *_Hit_X, vector<double> *_Hit_Y, vector<double> *_Hit_Z, vector<double> *_Hit_Energy, double a, int _particleID) {
+void Select::ResetEvent(vector<double> *_Hit_X, vector<double> *_Hit_Y, vector<double> *_Hit_Z, vector<double> *_Hit_Energy, double a) {
     Hit_X = *_Hit_X;
     Hit_Y = *_Hit_Y;
     Hit_Z = *_Hit_Z;
     Hit_Energy = *_Hit_Energy;
     beam_energy = a;
-    particleID = _particleID;
 
     // fill(CenterX.begin(), CenterX.end(), 0);
     // fill(CenterY.begin(), CenterY.end(), 0);
@@ -114,8 +113,7 @@ void Select::EnergyCenter() {
             double x = Hit_X.at(i) - tmp_x.at(layer);
             double y = Hit_Y.at(i) - tmp_y.at(layer);
             // if (x < 60 && x > -60 && y < 60 && y > -60)
-            int range_tmp = range[particleID - 1];
-            if (x < range_tmp && x > -range_tmp && y < range_tmp && y > -range_tmp) {
+            if (x < 100 && x > -100 && y < 100 && y > -100) {
                 // cout << CenterX.at(layer) << endl;
                 CenterX.at(layer) += Hit_X.at(i) * e;
                 CenterY.at(layer) += Hit_Y.at(i) * e;
@@ -201,12 +199,12 @@ int Select::Result(double &total_energy, vector<double> *&layer_energy,
     int flag_7 = 0;
     for (int i = 0; i < 20; i++) {
         // cout << CenterX.at(i) << "  ";
-        if (ishit[i] && (CenterX.at(i) > 180 || CenterX.at(i) < -180 || CenterY.at(i) > 180 || CenterY.at(i) < -180)) {
+        if (ishit[i] && (CenterX.at(i) > 120 || CenterX.at(i) < -120 || CenterY.at(i) > 120 || CenterY.at(i) < -120)) {
             flag_7++;
         }
     }
     // cout << flag_7 << endl;
-    if (flag_7 > 5) {
+    if (flag_7 > 2) {
         return 7;
     }
     _hitlayer = hitlayer;
@@ -216,33 +214,34 @@ int Select::Result(double &total_energy, vector<double> *&layer_energy,
     layer_energy->clear();
     layer_hitno->clear();
     for (int i = 0; i < 40; i++) {
-        layer_hitno->push_back(layerhitno[i]);
-        _hitno += layer_hitno->at(i);
         layer_energy->push_back(lenergy[i]);
+        layer_hitno->push_back(layerhitno[i]);
+    }
+    for (int i = 0; i < 30; i++) {
+        _hitno += layer_hitno->at(i);
         total_energy += layer_energy->at(i);
     }
     if (total_energy < 0.5 * MIP_E) {
         return 0;
     }
-    if (shower_start >= shower_start_ref[particleID - 1]) {
-        return 3;
-    }
-    if (shower_end >= shower_end_ref[particleID - 1]) {
-        return 9;
-    }
-    // cout << particleID << "  " << beam_energy << "  " << hitnocut_down[particleID - 1][beam_energy] << "  " << _hitno << "  " << hitnocut_up[particleID - 1][beam_energy] << endl;
-    if (_hitno < hitnocut_down[particleID - 1][beam_energy] || _hitno > hitnocut_up[particleID - 1][beam_energy]) {
+    if (_hitno < hitnocut_down[beam_energy] || _hitno > hitnocut_up[beam_energy]) {
         return 1;
     }
-    if (_hitlayer < hitlayercut_down[particleID - 1][beam_energy] || _hitlayer > hitlayercut_up[particleID - 1][beam_energy]) {
+    if (_hitlayer < hitlayercut_down[beam_energy] || _hitlayer > hitlayercut_up[beam_energy]) {
         return 2;
+    }
+    if (shower_start >= 10) {
+        return 3;
+    }
+    if (shower_end >= 25) {
+        return 9;
     }
     if (Ismip()) {
         return 4;
     }
-    // if (!Isstraight()) {
-    //     return 5;
-    // }
+    if (!Isstraight()) {
+        return 5;
+    }
     if (layer_hitno->at(0) > 1 || layer_hitno->at(0) == 0) {
         return 8;
     }
