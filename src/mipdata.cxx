@@ -1,7 +1,6 @@
 #include "Global.h"
 #include "RawtoRoot.h"
 #include "TLegend.h"
-#include "TRandom.h"
 #include "langaus.h"
 #include <TF1.h>
 #include <TFile.h>

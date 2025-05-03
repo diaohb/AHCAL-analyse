@@ -47,6 +47,7 @@ void HBase::ReadTree(const TString &fname, const TString &tname) {
     tin->SetBranchAddress("Hit_X", &Hit_X);
     tin->SetBranchAddress("Hit_Y", &Hit_Y);
     tin->SetBranchAddress("Hit_Z", &Hit_Z);
+    tin->SetBranchAddress("Cherenkov", &Cherenkov);
     // tin->SetBranchAddress("SiPM_Energy", &SiPM_Energy);
 }
 void HBase::Clear() {
@@ -59,5 +60,6 @@ void HBase::Clear() {
     if (Hit_X) Hit_X->clear();
     if (Hit_Y) Hit_Y->clear();
     if (Hit_Z) Hit_Z->clear();
+    if (Cherenkov) Cherenkov->clear();
     if (SiPM_Energy) SiPM_Energy->clear();
 }

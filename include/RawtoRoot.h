@@ -1,19 +1,15 @@
 #ifndef Treew_h_
 #define Treew_h_
 
-// #include<TROOT.h>
-//  #include<TChain.h>
-#include <TFile.h>
-#include <fstream>
-#include <iostream>
 #include <TCanvas.h>
+#include <TFile.h>
 #include <TH2.h>
 #include <TTree.h>
+#include <fstream>
 using namespace std;
-class raw2Root
-{
+class raw2Root {
 private:
-    static const int channel_FEE = 73; //(36charges+36times + BCIDs )*16column+ ChipID
+    static const int channel_FEE = 73;//(36charges+36times + BCIDs )*16column+ ChipID
     static const int cell_SP = 16;
     static const int chip_No = 9;
     static const int channel_No = 36;
@@ -66,7 +62,7 @@ public:
     int Chipbuffer_empty();
     int ReadList(const string _list);
     int MIPlist(const string _list);
-    int PEDlist(const string _list,const string ishittag=0);
+    int PEDlist(const string _list, const string ishittag = "0");
     int MIPlist(const string _list, string pedestal);
     int MIP(vector<int> *_cellid, vector<double> *_HG_Charge);
     int MIP(vector<int> *_cellid, vector<int> *hitTag);
@@ -104,12 +100,12 @@ private:
     vector<double> *HG_Charge = 0;
     vector<double> *LG_Charge = 0;
     vector<double> *Hit_Time = 0;
-    vector<double> *Hit_E=0;
-    vector<double> *Hit_X=0;
-    vector<double> *Hit_Y=0;
-    vector<double> *Hit_Z=0;
-    vector<double> *SiPM_Energy=0;
-    vector<double> *SiPM_Hit=0;
+    vector<double> *Hit_E = 0;
+    vector<double> *Hit_X = 0;
+    vector<double> *Hit_Y = 0;
+    vector<double> *Hit_Z = 0;
+    vector<double> *SiPM_Energy = 0;
+    vector<double> *SiPM_Hit = 0;
     vector<double> _temp;
     vector<string> list;
 };

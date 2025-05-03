@@ -33,20 +33,23 @@ int main(int argc, char *argv[]) {
     double rms = 0;
     int shower_start = 0;
     int shower_end = 0;
-    double f_15 = 0;// 15th, index=14
-    double f_20 = 0;
+    double shower_max = 0;
+    // double f_15 = 0;// 15th, index=14
+    // double f_20 = 0;
     int select_flag = 0;
     double FD = 0;
     double E_Hit = 0;
     double R[10] = {0};
     int particleID = 0;
+    int cherenkov = 0;
     vector<double> *layer_energy = 0;
+    vector<double> *layer_rms = 0;
     vector<double> *layer_hitno = 0;
     vector<int> *layer = 0;
     vector<double> *layer_hit_x = 0;
     vector<double> *layer_hit_y = 0;
-    vector<int> *cellid = 0;
-    vector<double> *hit_energy = 0;
+    // vector<int> *cellid = 0;
+    // vector<double> *hit_energy = 0;
     vector<double> *layer_max_energy = 0;
     vector<double> *layer_max_x = 0;
     vector<double> *layer_max_y = 0;
@@ -58,13 +61,15 @@ int main(int argc, char *argv[]) {
     tanalyse->Branch("hitlayer", &hitlayer);
     tanalyse->Branch("hitno", &hitno);
     tanalyse->Branch("big_hitno", &big_hitno);
-    tanalyse->Branch("zeta", &zeta);
+    // tanalyse->Branch("zeta", &zeta);
     tanalyse->Branch("rms", &rms);
     tanalyse->Branch("shower_start", &shower_start);
     tanalyse->Branch("shower_end", &shower_end);
-    tanalyse->Branch("f_15", &f_15);
-    tanalyse->Branch("f_20", &f_20);
+    tanalyse->Branch("shower_max", &shower_max);
+    // tanalyse->Branch("f_15", &f_15);
+    // tanalyse->Branch("f_20", &f_20);
     tanalyse->Branch("layer_energy", &layer_energy);
+    tanalyse->Branch("layer_rms", &layer_rms);
     tanalyse->Branch("layer_hitno", &layer_hitno);
     tanalyse->Branch("layer_hit_x", &layer_hit_x);
     tanalyse->Branch("layer_hit_y", &layer_hit_y);
@@ -72,11 +77,12 @@ int main(int argc, char *argv[]) {
     tanalyse->Branch("layer_max_x", &layer_max_x);
     tanalyse->Branch("layer_max_y", &layer_max_y);
     tanalyse->Branch("select_flag", &select_flag);
+    tanalyse->Branch("cherenkov", &cherenkov);
     // tanalyse->Branch("cellid", &cellid);
     // tanalyse->Branch("hit_energy", &hit_energy);
     tanalyse->Branch("FD", &FD);
     tanalyse->Branch("E_Hit", &E_Hit);
-    tanalyse->Branch("R", &R, "R[10]/D");
+    // tanalyse->Branch("R", &R, "R[10]/D");
 
     for (int l = 0; l < 40; l++) {
         layer->push_back(l);
@@ -90,12 +96,20 @@ int main(int argc, char *argv[]) {
         }
         string beamenergy = tmp;
         // beamenergy = beamenergy.substr(0,beamenergy.find_last_of('/'));
+        bool mg = 0;
+        if (beamenergy.find("GeV") != string::npos) {
+            mg = 1;
+        } else if (beamenergy.find("MeV") != string::npos) {
+            mg = 0;
+        }
         beamenergy = beamenergy.substr(0, beamenergy.find("eV") - 1);
         beamenergy = beamenergy.substr(beamenergy.rfind('/') + 1);
         beamenergy = beamenergy.substr(beamenergy.rfind('_') + 1);
         beam_energy = stod(beamenergy);
-        if (beam_energy == 500)
-            beam_energy = 0.5;
+        if (mg == 0)
+            beam_energy /= 1000.;
+        if (beam_energy != 0.5)
+            beam_energy = round(beam_energy);
         hbase->Clear();
         hbase->ReadTree(tmp, "EventTree");
 
@@ -111,10 +125,11 @@ int main(int argc, char *argv[]) {
             layer_max_energy->clear();
             layer_max_x->clear();
             layer_max_y->clear();
+            layer_rms->clear();
             // cellid->clear();
             // hit_energy->clear();
-            f_15 = 0;
-            f_20 = 0;
+            // f_15 = 0;
+            // f_20 = 0;
 
             select.ResetEvent(hbase->Hit_X, hbase->Hit_Y, hbase->Hit_Z, hbase->Hit_Energy, beam_energy, particleID);
 
@@ -122,6 +137,7 @@ int main(int argc, char *argv[]) {
 
             zeta = select.GetZeta();
             rms = select.GetRMS();
+            select.GetLayerRMS(layer_rms);
             FD = select.GetFD();
             E_Hit = select.GetE_Hit();
             select.GetR_alpha(R);
@@ -129,12 +145,13 @@ int main(int argc, char *argv[]) {
             shower_end = select.GetShower_End();
             select.GetCenter(layer_hit_x, layer_hit_y);
             // select.GetHitEnergy(cellid, hit_energy);
-            select.GetMax(layer_max_energy, layer_max_x, layer_max_y);
+            select.GetMax(layer_max_energy, layer_max_x, layer_max_y, shower_max);
             flag[result]++;
             select_flag = result;
-            if (result != 7) {
-                f_15 = layer_energy->at(14) / total_energy;
-                f_20 = layer_energy->at(19) / total_energy;
+            if (hbase->Cherenkov && hbase->Cherenkov->size() == 2 && hbase->Cherenkov->at(0) >= 0) {
+                cherenkov = hbase->Cherenkov->at(0) * hbase->Cherenkov->at(1);
+            } else {
+                cherenkov = -1;
             }
             tanalyse->Fill();
         }

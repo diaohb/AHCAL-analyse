@@ -22,7 +22,7 @@ Int_t main(int argc, char *argv[]) {
     raw2Root tw;
     tw.EnergyCalib(argv[1], argv[2], argv[3], argv[4], argv[5]);
     double end = clock();
-    cout << "end of RawToRoot : Time : " << (end - start) / CLOCKS_PER_SEC << endl;
+    cout << "end of Reconstruction : Time : " << (end - start) / CLOCKS_PER_SEC << endl;
     return 0;
 }
 int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string str_MIP, string output_file) {

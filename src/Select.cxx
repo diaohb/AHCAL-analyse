@@ -1,5 +1,6 @@
 #include "Select.h"
 #include "Global.h"
+#include <algorithm>
 using namespace std;
 Select::Select() {
     // std::cout<<"Selection start"<<std::endl;
@@ -18,13 +19,13 @@ void Select::ResetEvent(vector<double> *_Hit_X, vector<double> *_Hit_Y, vector<d
     beam_energy = a;
     particleID = _particleID;
 
-    // fill(CenterX.begin(), CenterX.end(), 0);
-    // fill(CenterY.begin(), CenterY.end(), 0);
-    // fill(max_energy.begin(), max_energy.end(), 0);
-    // fill(max_x.begin(), max_x.end(), 0);
-    // fill(max_y.begin(), max_y.end(), 0);
+    fill(CenterX.begin(), CenterX.end(), 0);
+    fill(CenterY.begin(), CenterY.end(), 0);
+    fill(max_energy.begin(), max_energy.end(), 0);
+    fill(max_x.begin(), max_x.end(), 0);
+    fill(max_y.begin(), max_y.end(), 0);
+    fill(rms.begin(), rms.end(), 0);
     fill(lenergy, lenergy + 40, 0);
-    fill(rms, rms + 40, 0);
     fill(rmsX, rmsX + 40, 0);
     fill(rmsY, rmsY + 40, 0);
     fill(alpha, alpha + 10, 0);
@@ -43,6 +44,7 @@ void Select::ResetEvent(vector<double> *_Hit_X, vector<double> *_Hit_Y, vector<d
     E_hit = 0;
     shower_start = 0;
     shower_end = 0;
+    shower_max = 0;
     Init();
 }
 
@@ -192,6 +194,7 @@ void Select::MaxEnergy() {
             max_y.at(layer) = Hit_Y.at(i);
         }
     }
+    shower_max = *max_element(max_energy.begin(), max_energy.end() - 2);
     // cout<<maxenergyX[0]<<"  "<<maxenergyY[0]<<endl;
 }
 
