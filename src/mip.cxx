@@ -79,7 +79,7 @@ int raw2Root::MIPlist(const string _list){
         ReadCalibTree(tin);
         for(int n=0;n<tin->GetEntries();n++){
             tin->GetEntry(n);
-            cout << MIP(cellID, Hit_E) << endl;
+            // cout << MIP(cellID, Hit_E) << endl;
             if (MIP(cellID, Hit_E))
             {
                 for(int i=0;i<cellID->size();i++){

@@ -35,7 +35,7 @@ Int_t main(int argc,char *argv[])
     raw2Root tw;
     tw.EnergyCalib(argv[1],argv[2],argv[3],argv[4],argv[5]);
     double end = clock();
-    cout<<"end of RawToRoot : Time : "<<(end-start)/CLOCKS_PER_SEC<<endl;
+    cout<<"end of Calib : Time : "<<(end-start)/CLOCKS_PER_SEC<<endl;
     return 0;
 }
 int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string str_MIP,string output_file){
@@ -137,7 +137,7 @@ int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string st
         //cout<<layer<<" "<<chip<<" "<<channel<<" "<<slope<<" "<<endl;
         gain_ratio[layer][chip][channel]=slope;
         gain_plat[layer][chip][channel]=plat;
-        // gain_intercept[layer][chip][channel] = intercept;
+        gain_intercept[layer][chip][channel] = intercept;
         if (gain_ratio[layer][chip][channel] < 10 || gain_ratio[layer][chip][channel] > 50)
             cout << CellID << " abnormal gain ratio " << layer << " " << chip << " " << channel << " " << slope << endl;
     }
@@ -227,15 +227,14 @@ int raw2Root::EnergyCalib(string str_dat,string str_ped,string str_dac,string st
             //         // hitE = (800 - ped_charge[layer][chip][channel]) * gain_ratio[layer][chip][channel] * MIP_E / MIP[layer][chip][channel];
             //     }
             // } 
-            else hitE=( LG_Charge->at(i_hit) - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]*MIP_E/MIP[layer][chip][channel];
+            else hitE=(( LG_Charge->at(i_hit) - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]+gain_intercept[layer][chip][channel])*MIP_E/MIP[layer][chip][channel];
             _Hit_E.push_back(hitE);
             _Hit_X.push_back(Pos_X(channel,chip));
             _Hit_Y.push_back(Pos_Y(channel,chip));
             _Hit_Z.push_back(layer*30);
             // _Hit_Time.push_back(Hit_Time->at(i_hit));
-            // cout << "test" << endl;
             Edep += hitE;
-            h2_HitMap->Fill(_Hit_X[i_hit],_Hit_Y[i_hit]);
+            h2_HitMap->Fill(Pos_X(channel,chip),Pos_Y(channel,chip));
             if(hitE>500*MIP_E){
                 cout<<hitE/MIP_E<<" high energy alert "<<layer<<" "<<chip<<" "<<channel<<endl;
                 cout<<HG_Charge->at(i_hit)<<" "<<MIP[layer][chip][channel]<<" "<<gain_ratio[layer][chip][channel]<<endl;
