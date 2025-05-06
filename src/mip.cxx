@@ -70,11 +70,20 @@ int raw2Root::MIPlist(const string _list) {
         ReadCalibTree(tin);
         for (int n = 0; n < tin->GetEntries(); n++) {
             tin->GetEntry(n);
+<<<<<<< HEAD
             cout << MIP(cellID, Hit_E) << endl;
             if (MIP(cellID, Hit_E)) {
                 for (int i = 0; i < cellID->size(); i++) {
                     int cid = cellID->at(i);
                     if (cid / 100 % 100 == 0) {
+=======
+            // cout << MIP(cellID, Hit_E) << endl;
+            if (MIP(cellID, Hit_E))
+            {
+                for(int i=0;i<cellID->size();i++){
+                    int cid=cellID->at(i);
+                    if(cid/100%100==0){
+>>>>>>> 84cb705 (update)
                         mmip[cid]->Fill(Hit_E->at(i));
                         double x = Pos_X_1(cid);
                         double y = Pos_Y_1(cid);

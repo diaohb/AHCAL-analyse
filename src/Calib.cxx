@@ -22,7 +22,11 @@ Int_t main(int argc, char *argv[]) {
     raw2Root tw;
     tw.EnergyCalib(argv[1], argv[2], argv[3], argv[4], argv[5]);
     double end = clock();
+<<<<<<< HEAD
     cout << "end of Reconstruction : Time : " << (end - start) / CLOCKS_PER_SEC << endl;
+=======
+    cout<<"end of Calib : Time : "<<(end-start)/CLOCKS_PER_SEC<<endl;
+>>>>>>> 84cb705 (update)
     return 0;
 }
 int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string str_MIP, string output_file) {
@@ -110,10 +114,20 @@ int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string
     tree_in->SetBranchAddress("intercept", &intercept);
     for (int i = 0; i < tree_in->GetEntries(); ++i) {
         tree_in->GetEntry(i);
+<<<<<<< HEAD
         decode_cellid(CellID, layer, chip, channel);
         gain_ratio[layer][chip][channel] = slope;
         gain_plat[layer][chip][channel] = plat;
         gain_intercept[layer][chip][channel] = intercept;
+=======
+        decode_cellid(CellID,layer,chip,channel);
+        //cout<<layer<<" "<<chip<<" "<<channel<<" "<<slope<<" "<<endl;
+        gain_ratio[layer][chip][channel]=slope;
+        gain_plat[layer][chip][channel]=plat;
+        gain_intercept[layer][chip][channel] = intercept;
+        if (gain_ratio[layer][chip][channel] < 10 || gain_ratio[layer][chip][channel] > 50)
+            cout << CellID << " abnormal gain ratio " << layer << " " << chip << " " << channel << " " << slope << endl;
+>>>>>>> 84cb705 (update)
     }
     tree_in->Delete();
     fin->Close();
@@ -194,21 +208,33 @@ int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string
             //         hitE = -100;
             //         // hitE = (800 - ped_charge[layer][chip][channel]) * gain_ratio[layer][chip][channel] * MIP_E / MIP[layer][chip][channel];
             //     }
+<<<<<<< HEAD
             // }
             else
                 hitE = ((LG_Charge->at(i_hit) - ped_charge[layer][chip][channel]) * gain_ratio[layer][chip][channel] + gain_intercept[layer][chip][channel]) * MIP_E / MIP[layer][chip][channel];
             double x = Pos_X(channel, chip);
             double y = Pos_Y(channel, chip);
+=======
+            // } 
+            else hitE=(( LG_Charge->at(i_hit) - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]+gain_intercept[layer][chip][channel])*MIP_E/MIP[layer][chip][channel];
+>>>>>>> 84cb705 (update)
             _Hit_E.push_back(hitE);
             _Hit_X.push_back(x);
             _Hit_Y.push_back(y);
             _Hit_Z.push_back(layer * 30);
             // _Hit_Time.push_back(Hit_Time->at(i_hit));
             Edep += hitE;
+<<<<<<< HEAD
             h2_HitMap->Fill(x, y);
             if (hitE > 500 * MIP_E) {
                 cout << hitE / MIP_E << " high energy alert " << layer << " " << chip << " " << channel << endl;
                 cout << HG_Charge->at(i_hit) << " " << MIP[layer][chip][channel] << " " << gain_ratio[layer][chip][channel] << endl;
+=======
+            h2_HitMap->Fill(Pos_X(channel,chip),Pos_Y(channel,chip));
+            if(hitE>500*MIP_E){
+                cout<<hitE/MIP_E<<" high energy alert "<<layer<<" "<<chip<<" "<<channel<<endl;
+                cout<<HG_Charge->at(i_hit)<<" "<<MIP[layer][chip][channel]<<" "<<gain_ratio[layer][chip][channel]<<endl;
+>>>>>>> 84cb705 (update)
             }
         }
         h_Edep->Fill(Edep);

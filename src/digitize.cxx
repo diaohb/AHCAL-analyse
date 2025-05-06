@@ -162,6 +162,7 @@ int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string st
         // cout<<layer<<" "<<chip<<" "<<channel<<" "<<slope<<" "<<endl;
         gain_ratio[layer][chip][channel] = slope;
         gain_plat[layer][chip][channel] = plat;
+        gain_intercept[layer][chip][channel] = intercept;
         lowgain_plat[layer][chip][channel] = low_plat;
         gain_intercept[layer][chip][channel] = intercept;
         if (gain_ratio[layer][chip][channel] < 10 || gain_ratio[layer][chip][channel] > 50)
@@ -289,12 +290,18 @@ int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string st
                     gain_plat[i_layer][i_chip][i_chan] = ref_gain_plat;
                 if (Sigma[i_layer][i_chip][i_chan] < 0)
                     Sigma[i_layer][i_chip][i_chan] = ref_sigma;
+<<<<<<< HEAD
                 if (chi2_ndf[layer][chip][channel] < 20 || NDF[layer][chip][channel] > 3 ||
                     SPE[layer][chip][channel] >= 15) {
+=======
+                if (chi2_ndf[layer][chip][channel] < 20 && NDF[layer][chip][channel] > 3 && SPE[layer][chip][channel] >= 15)
+                {
+>>>>>>> 84cb705 (update)
                     mean_gain += SPE[layer][chip][channel];
                     n_good++;
                 }
             }
+<<<<<<< HEAD
             if (n_good != 0) {
                 mean_gain /= n_good;
             } else {
@@ -305,6 +312,16 @@ int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string st
                     SPE[layer][chip][channel] < mean_gain - 5 ||
                     SPE[layer][chip][channel] > mean_gain + 5 || NDF[layer][chip][channel] <= 3 ||
                     SPE[layer][chip][channel] < 15) {
+=======
+            if(n_good != 0)
+                mean_gain /= n_good;
+            else
+                mean_gain = ref_spe;
+            for (int i_chan = 0; i_chan < channel_No; ++i_chan)
+            {
+                if (chi2_ndf[layer][chip][channel] >= 20 || SPE[layer][chip][channel] < mean_gain - 5 || SPE[layer][chip][channel] > mean_gain + 5 || NDF[layer][chip][channel] <= 3 || SPE[layer][chip][channel] < 15)
+                {
+>>>>>>> 84cb705 (update)
                     SPE[layer][chip][channel] = mean_gain;
                 }
             }
@@ -420,6 +437,7 @@ int raw2Root::digi(double energy, double sipm_energy, double &HG, double &LG, in
     double adc_sigma = sqrt(n_fired) * 8;// Sigma[layer][chip][channel];
     // TODO
     adc = gRandom->Gaus(adc, adc_sigma);
+<<<<<<< HEAD
     // electronic non linearity
     // adc = gRandom->Gaus(adc, 0.03 * adc);
     // ADC to HG LG
@@ -429,8 +447,18 @@ int raw2Root::digi(double energy, double sipm_energy, double &HG, double &LG, in
     HG = gRandom->Gaus(HG, 0.02 * HG);
     LG = gRandom->Gaus(LG, 0.02 * LG);
     if (HG > gain_plat[layer][chip][channel]) {
+=======
+    adc = gRandom->Gaus(adc, 0.02*adc);
+    // ADC to HG LG
+    HG = adc + gRandom->Gaus(ped_high[layer][chip][channel], 1.5*rms_high[layer][chip][channel]);
+    // HG = adc + gRandom->Gaus(ped_high[layer][chip][channel], 20);
+    LG = (adc-gain_intercept[layer][chip][channel]) / gain_ratio[layer][chip][channel] + gRandom->Gaus(ped_low[layer][chip][channel], 5*rms_low[layer][chip][channel]);
+    if (HG > gain_plat[layer][chip][channel])
+    {
+>>>>>>> 84cb705 (update)
         HG = gain_plat[layer][chip][channel];
     }
+    // HG=gRandom->Gaus(HG, 0.03*HG);
     // if(int(cid/1e5)==6){
     //     // cout<<"old: "<<LG<<endl;
     //     LG=fun6->Eval(LG-ped_low[layer][chip][channel])+ped_low[layer][chip][channel];
@@ -446,6 +474,7 @@ int raw2Root::digi(double energy, double sipm_energy, double &HG, double &LG, in
     if (LG > lowgain_plat[layer][chip][channel]) {
         LG = lowgain_plat[layer][chip][channel];
     }
+    // LG=gRandom->Gaus(LG, 0.03*LG);
     // cout << LG << "   ";
     // funline->SetParameter(0, -lp[layer][chip][channel][0] /
     // lp[layer][chip][channel][1]); funline->SetParameter(1,
