@@ -23,10 +23,14 @@ Int_t main(int argc, char *argv[]) {
     tw.EnergyCalib(argv[1], argv[2], argv[3], argv[4], argv[5]);
     double end = clock();
 <<<<<<< HEAD
+<<<<<<< HEAD
     cout << "end of Reconstruction : Time : " << (end - start) / CLOCKS_PER_SEC << endl;
 =======
     cout<<"end of Calib : Time : "<<(end-start)/CLOCKS_PER_SEC<<endl;
 >>>>>>> 84cb705 (update)
+=======
+    cout<<"end of Calib : Time : "<<(end-start)/CLOCKS_PER_SEC<<endl;
+>>>>>>> main
     return 0;
 }
 int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string str_MIP, string output_file) {
@@ -217,7 +221,10 @@ int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string
 =======
             // } 
             else hitE=(( LG_Charge->at(i_hit) - ped_charge[layer][chip][channel] )*gain_ratio[layer][chip][channel]+gain_intercept[layer][chip][channel])*MIP_E/MIP[layer][chip][channel];
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
             _Hit_E.push_back(hitE);
             _Hit_X.push_back(x);
             _Hit_Y.push_back(y);
@@ -225,11 +232,14 @@ int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string
             // _Hit_Time.push_back(Hit_Time->at(i_hit));
             Edep += hitE;
 <<<<<<< HEAD
+<<<<<<< HEAD
             h2_HitMap->Fill(x, y);
             if (hitE > 500 * MIP_E) {
                 cout << hitE / MIP_E << " high energy alert " << layer << " " << chip << " " << channel << endl;
                 cout << HG_Charge->at(i_hit) << " " << MIP[layer][chip][channel] << " " << gain_ratio[layer][chip][channel] << endl;
 =======
+=======
+>>>>>>> main
             h2_HitMap->Fill(Pos_X(channel,chip),Pos_Y(channel,chip));
             if(hitE>500*MIP_E){
                 cout<<hitE/MIP_E<<" high energy alert "<<layer<<" "<<chip<<" "<<channel<<endl;

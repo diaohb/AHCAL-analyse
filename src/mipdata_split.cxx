@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include "Global.h"
 #include "RawtoRoot.h"
 #include "TLegend.h"
@@ -26,6 +27,8 @@ using namespace std;
 void fit(TH1D *his, Double_t *fitrange, Double_t *startvalues, Double_t *parlimitslo, Double_t *parlimitshi, Double_t *fitparams, Double_t *fiterrors, Double_t *ChiSqr, Int_t *NDF);
 int main(int argc, char *argv[]) {
 =======
+=======
+>>>>>>> main
 #include "RawtoRoot.h"
 #include "Global.h"
 #include "langaus.h"
@@ -60,7 +63,10 @@ using namespace std;
 void fit(TH1D *his, Double_t *fitrange, Double_t *startvalues, Double_t *parlimitslo, Double_t *parlimitshi, Double_t *fitparams, Double_t *fiterrors, Double_t *ChiSqr, Int_t *NDF);
 int main(int argc, char *argv[])
 {
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
     double start = clock();
     raw2Root tw;
     tw.MIPlist(argv[1], argv[2]);
@@ -68,6 +74,7 @@ int main(int argc, char *argv[])
     cout << "end of mip : Time : " << (end - start) / CLOCKS_PER_SEC << endl;
     return 0;
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 int raw2Root::MIPlist(const string _list, string pedestal) {
     ReadList(_list);
@@ -82,6 +89,8 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
     tin = (TTree *) fin->Get("pedestal");
     if (!tin) {
 =======
+=======
+>>>>>>> main
 int raw2Root::MIPlist(const string _list, string pedestal)
 {
     ReadList(_list);
@@ -96,11 +105,15 @@ int raw2Root::MIPlist(const string _list, string pedestal)
     tin = (TTree *)fin->Get("pedestal");
     if (!tin)
     {
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
         cout << "cant get tree pedestal" << endl;
         return 0;
     }
     int CellID = 0;
+<<<<<<< HEAD
 <<<<<<< HEAD
     double pedestal_high = 0;
     tin->SetBranchAddress("cellid", &CellID);
@@ -108,17 +121,23 @@ int raw2Root::MIPlist(const string _list, string pedestal)
     unordered_map<int, double> ped_high;
     for (int i = 0; i < tin->GetEntries(); ++i) {
 =======
+=======
+>>>>>>> main
     double pedestal_high = 0, pedestal_low = 0;
     tin->SetBranchAddress("cellid", &CellID);
     tin->SetBranchAddress("highgain_peak", &pedestal_high);
     unordered_map<int, double> ped_high;
     for (int i = 0; i < tin->GetEntries(); ++i)
     {
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
         tin->GetEntry(i);
         ped_high[CellID] = pedestal_high;
     }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     fout1 = TFile::Open(TString(_list) + "_mip1.root", "recreate");
     fout2 = TFile::Open(TString(_list) + "_mip2.root", "recreate");
@@ -147,6 +166,8 @@ int raw2Root::MIPlist(const string _list, string pedestal)
     int tag = 0;
     for_each(list.begin(), list.end(), [&](string tmp) {
 =======
+=======
+>>>>>>> main
     fout = TFile::Open(TString(_list) + "_mip.root", "recreate");
     // fout_noise = TFile::Open(TString(_list) + "_noise.root", "recreate");
     unordered_map<int, TH1D *> mmip;
@@ -236,17 +257,23 @@ int raw2Root::MIPlist(const string _list, string pedestal)
     gRandom = new TRandom3(0);
     for_each(list.begin(), list.end(), [&](string tmp)
              {
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
         cout<<"Reading: "<<tmp<<endl;
         fin=TFile::Open(TString(tmp),"read");
         tin=(TTree*)fin->Get("Raw_Hit");
         ReadTreeBranch(tin);
+<<<<<<< HEAD
 <<<<<<< HEAD
         for (int n = 0; n < tin->GetEntries(); n++)
         {
             tin->GetEntry(n);
             if (MIP(cellID, hitTag, HG_Charge)) {
 =======
+=======
+>>>>>>> main
 		// total_entries=0;
 		// fill(layer_hit,layer_hit+40,0);
         for (int n = 0; n < tin->GetEntries(); n++)
@@ -259,17 +286,23 @@ int raw2Root::MIPlist(const string _list, string pedestal)
             fill(layer_hit, layer_hit + 40, 0);
             if (mip_flag == 1)
             {
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
                 int l = cellID->size();
                 for (int i = 0; i < l; i++)
                 {
                     int cid = cellID->at(i);
+<<<<<<< HEAD
 <<<<<<< HEAD
                     if (gRandom->Uniform() < 0.5) {
                         mmip_chip1[cid / 10000]->Fill(HG_Charge->at(i) - ped_high[cid]);
                         mmip1[cid]->Fill(HG_Charge->at(i) - ped_high[cid]);
                     } else {
 =======
+=======
+>>>>>>> main
                     int layer = cid / 100000;
                     double x = Pos_X_1(cid);
                     double y = Pos_Y_1(cid);
@@ -282,17 +315,23 @@ int raw2Root::MIPlist(const string _list, string pedestal)
                         mmip[cid]->Fill(HG_Charge->at(i) - ped_high[cid]);
                     }
                     else{
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
                         mmip_chip2[cid / 10000]->Fill(HG_Charge->at(i) - ped_high[cid]);
                         mmip2[cid]->Fill(HG_Charge->at(i) - ped_high[cid]);
                     }
                 }
+<<<<<<< HEAD
 <<<<<<< HEAD
             }
         }
         fin->Close(); });
     TString dir = "histogram";
 =======
+=======
+>>>>>>> main
                 hit_x/=l;
                 hit_y/=l;
                 for (int i = 0; i < noise_cellid->size(); i++){
@@ -308,13 +347,17 @@ int raw2Root::MIPlist(const string _list, string pedestal)
     fout->mkdir(dir);
     fout->mkdir("noise");
     fout->mkdir("histogram2");
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
     double fr[2];
     double sv[4], pllo[4], plhi[4], fps[4], fpe[4];
     double chisqr;
     int ndf;
     int cut = 0;
     // mutex g_mutex;
+<<<<<<< HEAD
 <<<<<<< HEAD
     auto ffit = [&](int layer, unordered_map<int, TH1D *> mmip_chip, unordered_map<int, TH1D *> mmip, TTree *tout, TFile *fout) {
         TString slayer = "layer" + TString(to_string(layer).c_str());
@@ -323,6 +366,8 @@ int raw2Root::MIPlist(const string _list, string pedestal)
         for (int chip = 0; chip < 9; chip++) {
             TString schip = "chip" + TString(to_string(chip).c_str());
 =======
+=======
+>>>>>>> main
     auto ffit = [&](int layer, unordered_map<int, TH1D *> fmip, unordered_map<int, TH1D *> fnoise, unordered_map<int, TH1D *> fchip,TTree* t)
     {
         TString slayer = "layer" + TString(to_string(layer).c_str());
@@ -339,7 +384,10 @@ int raw2Root::MIPlist(const string _list, string pedestal)
             //     fnoise[layer * 1e5 + chip * 1e4 + channel]->Write();
             // }
 
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
             fout->mkdir(dir + "/" + slayer + "/" + schip);
             fout->cd(dir + "/" + slayer + "/" + schip);
             fr[0] = 150;
@@ -347,10 +395,14 @@ int raw2Root::MIPlist(const string _list, string pedestal)
             sv[0] = 40;
             sv[1] = 344;
 <<<<<<< HEAD
+<<<<<<< HEAD
             sv[2] = mmip_chip[layer * 10 + chip]->Integral(50, 500);
 =======
             sv[2] = fchip[layer * 10 + chip]->Integral(50,500);
 >>>>>>> 84cb705 (update)
+=======
+            sv[2] = fchip[layer * 10 + chip]->Integral(50,500);
+>>>>>>> main
             sv[3] = 80;
             pllo[0] = 10;
             pllo[1] = 100;
@@ -362,36 +414,49 @@ int raw2Root::MIPlist(const string _list, string pedestal)
             plhi[3] = 200;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
             if (sv[2] >= 1000) {
                 for (cut = 75; cut > 0; cut--) {
                     if (mmip_chip[layer * 10 + chip]->GetBinContent(cut) < sv[2] / 400) {
 =======
+=======
+>>>>>>> main
             if (sv[2] >= 1000)
             {
                 for (cut = 75; cut > 0; cut--)
                 {
                     if (fchip[layer*10+chip]->GetBinContent(cut) < sv[2] / 400)
                     {
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
                         break;
                     }
                 }
                 // cut += 5;
 <<<<<<< HEAD
+<<<<<<< HEAD
                 fr[0] = mmip_chip[layer * 10 + chip]->GetBinCenter(cut);
                 for (cut = 100; cut < 250; cut++) {
                     if ((mmip_chip[layer * 10 + chip]->GetBinContent(cut) + mmip_chip[layer * 10 + chip]->GetBinContent(cut + 1)) < sv[2] / 500) {
 =======
+=======
+>>>>>>> main
                 fr[0] = fchip[layer*10+chip]->GetBinCenter(cut);
                 for (cut = 100; cut < 250; cut++)
                 {
                     if ((fchip[layer*10+chip]->GetBinContent(cut) + fchip[layer*10+chip]->GetBinContent(cut + 1)) < sv[2] / 500)
                     {
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
                         break;
                     }
                 }
                 cut -= 10;
+<<<<<<< HEAD
 <<<<<<< HEAD
                 fr[1] = mmip_chip[layer * 10 + chip]->GetBinCenter(cut);
                 // g_mutex.lock();
@@ -401,11 +466,17 @@ int raw2Root::MIPlist(const string _list, string pedestal)
                 // g_mutex.lock();
                 langaufit(fchip[layer * 10 + chip], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
 >>>>>>> 84cb705 (update)
+=======
+                fr[1] = fchip[layer*10+chip]->GetBinCenter(cut);
+                // g_mutex.lock();
+                langaufit(fchip[layer * 10 + chip], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
+>>>>>>> main
                 // g_mutex.unlock();
             }
             sv[0] = fps[0];
             sv[1] = fps[1];
             sv[3] = fps[3];
+<<<<<<< HEAD
 <<<<<<< HEAD
             mmip_chip[layer * 10 + chip]->Write();
             for (int channel = 0; channel < 36; channel++) {
@@ -419,6 +490,8 @@ int raw2Root::MIPlist(const string _list, string pedestal)
                     tout->Fill();
                     mmip[cellid]->Write();
 =======
+=======
+>>>>>>> main
             fchip[layer * 10 + chip]->Write();
             for (int channel = 0; channel < 36; channel++)
             {
@@ -432,36 +505,50 @@ int raw2Root::MIPlist(const string _list, string pedestal)
                     tag=-2;
                     t->Fill();
                     fmip[cellid]->Write();
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
                     continue;
                 }
                 // for (cut = 75; cut > 25; cut--)
                 // {
 <<<<<<< HEAD
+<<<<<<< HEAD
                 //     if (mmip1[cellid]->GetBinContent(cut) < sv[2] / 400)
 =======
                 //     if (mmip[cellid]->GetBinContent(cut) < sv[2] / 400)
 >>>>>>> 84cb705 (update)
+=======
+                //     if (mmip[cellid]->GetBinContent(cut) < sv[2] / 400)
+>>>>>>> main
                 //     {
                 //         break;
                 //     }
                 // }
                 // cut += 5;
 <<<<<<< HEAD
+<<<<<<< HEAD
                 // fr[0] = mmip1[cellid]->GetBinCenter(cut);
                 for (cut = 100; cut < 250; cut++) {
                     if ((mmip[cellid]->GetBinContent(cut) + mmip[cellid]->GetBinContent(cut + 1)) < sv[2] / 500) {
 =======
+=======
+>>>>>>> main
                 // fr[0] = mmip[cellid]->GetBinCenter(cut);
                 for (cut = 100; cut < 250; cut++)
                 {
                     if ((fmip[cellid]->GetBinContent(cut) + fmip[cellid]->GetBinContent(cut + 1)) < sv[2] / 500)
                     {
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
                         break;
                     }
                 }
                 cut -= 10;
+<<<<<<< HEAD
 <<<<<<< HEAD
                 fr[1] = mmip[cellid]->GetBinCenter(cut);
                 // g_mutex.lock();
@@ -480,6 +567,8 @@ int raw2Root::MIPlist(const string _list, string pedestal)
                 }
                 tout->Fill();
 =======
+=======
+>>>>>>> main
                 fr[1] = fmip[cellid]->GetBinCenter(cut);
                 // g_mutex.lock();
                 langaufit(fmip[cellid], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
@@ -497,11 +586,15 @@ int raw2Root::MIPlist(const string _list, string pedestal)
                     tag = -3;
                 }
                 t->Fill();
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
             }
         }
         cout << "fitting " << slayer << " done" << endl;
     };
+<<<<<<< HEAD
 <<<<<<< HEAD
     auto write = [&](TFile *fout, TTree *tout, unordered_map<int, TH1D *> mmip_chip, unordered_map<int, TH1D *> mmip) {
         tout = new TTree("MIP_Calibration", "MIP_Calibration");
@@ -531,6 +624,8 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
         int cid = _cellid->at(i);
         if (hitTag->at(i) == 0 || (hitTag->at(i) && cid / 100 % 100 != 0)) {
 =======
+=======
+>>>>>>> main
     // thread th[40];
     for (int i = 0; i < 40; i++)
     {
@@ -559,7 +654,10 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
         int cid = _cellid->at(i);
         if (hitTag->at(i) == 0 || (hitTag->at(i) && cid / 100 % 100 != 0))
         {
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
             _cellid->erase(_cellid->begin() + i);
             highgain->erase(highgain->begin() + i);
             hitTag->erase(hitTag->begin() + i);
@@ -572,11 +670,16 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
         return 0;
     double hit_x = 0, hit_y = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
     for (int i = 0; i < l; i++) {
 =======
     for (int i = 0; i < l; i++)
     {
 >>>>>>> 84cb705 (update)
+=======
+    for (int i = 0; i < l; i++)
+    {
+>>>>>>> main
         int cid = _cellid->at(i);
         hit_x += Pos_X_1(cid);
         hit_y += Pos_Y_1(cid);
@@ -584,10 +687,13 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
     hit_x /= l;
     hit_y /= l;
 <<<<<<< HEAD
+<<<<<<< HEAD
     for (int i = 0; i < _cellid->size(); i++) {
         int cid = _cellid->at(i);
         if (abs(Pos_X_1(cid) - hit_x) > 60 || abs(Pos_Y_1(cid) - hit_y) > 60) {
 =======
+=======
+>>>>>>> main
     for (int i = 0; i < _cellid->size(); i++)
     {
         int cid = _cellid->at(i);
@@ -595,7 +701,10 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
         {
             noise_cellid->push_back(cid);
             noise_hit->push_back(highgain->at(i));
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
             _cellid->erase(_cellid->begin() + i);
             highgain->erase(highgain->begin() + i);
             i--;
@@ -603,11 +712,16 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
     }
     int layerlen[40] = {0};
 <<<<<<< HEAD
+<<<<<<< HEAD
     for (int i = 0; i < _cellid->size(); i++) {
 =======
     for (int i = 0; i < _cellid->size(); i++)
     {
 >>>>>>> 84cb705 (update)
+=======
+    for (int i = 0; i < _cellid->size(); i++)
+    {
+>>>>>>> main
         int layer = _cellid->at(i) / 100000;
         layerlen[layer]++;
     }
@@ -620,16 +734,22 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
     // }
     int hitlayer = 0;
 <<<<<<< HEAD
+<<<<<<< HEAD
     for (int i = 0; i < 40; i++) {
 =======
     for (int i = 0; i < 40; i++)
     {
 >>>>>>> 84cb705 (update)
+=======
+    for (int i = 0; i < 40; i++)
+    {
+>>>>>>> main
         if (layerlen[i])
             hitlayer++;
     }
     if (hitlayer < 30)
         return 0;
+<<<<<<< HEAD
 <<<<<<< HEAD
     int flag03 = 0, flag358 = 0;
     int cid0 = 0, cid38 = 0;
@@ -646,6 +766,8 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
             flag358++;
             cid38 = cid % 100000;
 =======
+=======
+>>>>>>> main
     int flag03=0,flag358=0;
     int cid0=0,cid38=0;
     // int h0=0,h38=0;
@@ -660,7 +782,10 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
         if(flag358==0&&int(cid/1e5) >= 35 &&int(cid/1e5) < 38){
             flag358++;
             cid38=cid%100000;
+<<<<<<< HEAD
 >>>>>>> 84cb705 (update)
+=======
+>>>>>>> main
             // break;
             // h38 = highgain->at(i);
         }

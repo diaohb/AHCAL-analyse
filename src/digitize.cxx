@@ -291,9 +291,12 @@ int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string st
                 if (Sigma[i_layer][i_chip][i_chan] < 0)
                     Sigma[i_layer][i_chip][i_chan] = ref_sigma;
 <<<<<<< HEAD
+<<<<<<< HEAD
                 if (chi2_ndf[layer][chip][channel] < 20 || NDF[layer][chip][channel] > 3 ||
                     SPE[layer][chip][channel] >= 15) {
 =======
+=======
+>>>>>>> main
                 if (chi2_ndf[layer][chip][channel] < 20 && NDF[layer][chip][channel] > 3 && SPE[layer][chip][channel] >= 15)
                 {
 >>>>>>> 84cb705 (update)
@@ -301,6 +304,7 @@ int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string st
                     n_good++;
                 }
             }
+<<<<<<< HEAD
 <<<<<<< HEAD
             if (n_good != 0) {
                 mean_gain /= n_good;
@@ -313,6 +317,8 @@ int raw2Root::Digitize(string str_dat, string str_ped, string str_dac, string st
                     SPE[layer][chip][channel] > mean_gain + 5 || NDF[layer][chip][channel] <= 3 ||
                     SPE[layer][chip][channel] < 15) {
 =======
+=======
+>>>>>>> main
             if(n_good != 0)
                 mean_gain /= n_good;
             else
@@ -438,6 +444,7 @@ int raw2Root::digi(double energy, double sipm_energy, double &HG, double &LG, in
     // TODO
     adc = gRandom->Gaus(adc, adc_sigma);
 <<<<<<< HEAD
+<<<<<<< HEAD
     // electronic non linearity
     // adc = gRandom->Gaus(adc, 0.03 * adc);
     // ADC to HG LG
@@ -448,6 +455,8 @@ int raw2Root::digi(double energy, double sipm_energy, double &HG, double &LG, in
     LG = gRandom->Gaus(LG, 0.02 * LG);
     if (HG > gain_plat[layer][chip][channel]) {
 =======
+=======
+>>>>>>> main
     adc = gRandom->Gaus(adc, 0.02*adc);
     // ADC to HG LG
     HG = adc + gRandom->Gaus(ped_high[layer][chip][channel], 1.5*rms_high[layer][chip][channel]);
