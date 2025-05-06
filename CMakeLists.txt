@@ -49,25 +49,12 @@ add_executable(mip src/mip.cxx src/Tree.cxx)
 add_executable(ped src/pedestal.cxx src/Tree.cxx)
 add_executable(mipdata src/mipdata.cxx src/Tree.cxx)
 add_executable(mipdata_split src/mipdata_split.cxx src/Tree.cxx)
-<<<<<<< HEAD
-<<<<<<< HEAD
 add_executable(mip_e src/mip_e.cxx src/Tree.cxx)
-add_executable(disp src/disp.cxx)
-add_executable(disp2d src/disp2d.cxx)
-add_executable(decode src/decode.cxx)
 add_executable(decode149 src/decode149.cxx)
-=======
 add_executable(disp src/disp.cxx)
 add_executable(disp2d src/disp2d.cxx)
-add_executable(decode src/decode.cxx)
 add_executable(decode_temp src/decode_temp.cxx)
->>>>>>> 84cb705 (update)
-=======
-add_executable(disp src/disp.cxx)
-add_executable(disp2d src/disp2d.cxx)
 add_executable(decode src/decode.cxx)
-add_executable(decode_temp src/decode_temp.cxx)
->>>>>>> main
 add_executable(pid src/PID.cxx)
 #link libraries
 target_link_libraries(Calib ${ROOT_LIBRARIES})
@@ -78,13 +65,7 @@ target_link_libraries(mip ${ROOT_LIBRARIES})
 target_link_libraries(ped ${ROOT_LIBRARIES})
 target_link_libraries(mipdata ${ROOT_LIBRARIES})
 target_link_libraries(mipdata_split ${ROOT_LIBRARIES})
-<<<<<<< HEAD
-<<<<<<< HEAD
 target_link_libraries(mip_e ${ROOT_LIBRARIES})
-=======
->>>>>>> 84cb705 (update)
-=======
->>>>>>> main
 target_link_libraries(analyse ${ROOT_LIBRARIES} Select HBase)
 # target_link_libraries(temp_correct ${ROOT_LIBRARIES} HBase)
 # target_link_libraries(analysev2 ${ROOT_LIBRARIES} Select HBase)
