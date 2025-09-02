@@ -12,7 +12,7 @@
 #include <iostream>
 #include <vector>
 using namespace std;
-int distribution() {
+int distribution_hitno() {
     SetStyle();
     SetPrelimStyle();
     gRandom = new TRandom3(1);
@@ -24,20 +24,21 @@ int distribution() {
     // double rangee[6] = {100, 140, 160, 180, 200, 220};
     int nbins[6] = {200, 200, 200, 200, 200, 200};
     double energy[6] = {0.5, 1, 2, 3, 4, 5};
-    double ranges[6] = {0, 0, 10, 30, 40, 50};
-    double rangee[6] = {25, 40, 70, 80, 120, 130};
+    double ranges[6] = {0, 0, 0, 0, 0, 0};
+    double rangee[6] = {20, 30, 40, 50, 50, 60};
+    int shower_layer[6] = {2, 3, 5, 6, 6, 7};
     int rms_limit[6] = {100, 200, 300, 400, 400, 500};
     // int nbins[11] = {200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200};
     // double energy[11] = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15};
     // double ranges[11] = {0, 0, 0, 00, 0, 0, 0, 0, 0, 0, 0};
-    // double rangee[11] = {40, 80, 100, 150, 180, 200, 200, 250, 300, 450, 500};
-    // int rms_limit[11] = {300, 600, 1000, 1200, 1500, 1700, 2000, 2200, 2500, 2700, 3000};
+    // double rangee[11] = {40, 50, 60, 70, 80, 90, 100, 110, 130, 150, 180};
     // int track_limit[11] = {10000, 20000, 20000, 30000, 40000, 40000, 40000, 40000, 40000, 40000, 40000};
+    // int rms_limit[11] = {300, 600, 1000, 1200, 1500, 1700, 2000, 2200, 2500, 2700, 3000};
     // int shower_layer[11] = {2, 4, 5, 6, 6, 7, 8, 9, 10, 10, 11};
     // double limit_2345[11] = {7, 15, 20, 25, 35, 40, 45, 50, 60, 70, 90};
     const int n_total = 6;
-    TString pdf_name = "figure/trigger40_PS_energy_3008_cherenkov2345_noise1_HP.pdf";
-    string txtname = "txt/energy_PS_3008_cherenkov2345_noise1_HP.txt";
+    TString pdf_name = "figure/trigger40_PS_energy_3008_cherenkov2345_hitno_noise1_HP.pdf";
+    string txtname = "txt/trigger40_PS_energy_3008_cherenkov2345_hitno_noise1_HP.txt";
     // TString filename[7] = {"/home/diaohb/CEPC/ihep/PS/analyse/intercept/pi-list_analyse.root",
     //                        //   "/home/diaohb/CEPC/ihep/PS/analyse/split/list2_analyse.root",
     //                        "/home/diaohb/CEPC/AHCAL-simulation/run/0826_30080126_trigger40_pi_126/list_PS_noise1/calib_analyse.root",
@@ -57,7 +58,7 @@ int distribution() {
     for (int i = 0; i < 7; i++) {
         for (int n = 0; n < n_total; n++) {
             TString sn = TString::Format("%d GeV  ", int(energy[n]));
-            hen[i][n] = new TH1D(sn + "hen", sn + "hen", nbins[n], ranges[n], rangee[n]);
+            hen[i][n] = new TH1D(sn + "hen", sn + "hen", int(rangee[n]), ranges[n], rangee[n]);
         }
     }
     TFile *fin, *_fin;
@@ -136,7 +137,7 @@ int distribution() {
                 // if (n_e < 5) {
                 fun->SetParameters(parameters[n_e + 1]);
                 // }
-                if (_beam_energy == energy[n_e] && (_select_flag == 6) && _rms < rms_limit[n_e]) {
+                if (_beam_energy == energy[n_e] && _select_flag == 6 && _rms < rms_limit[n_e]) {
                     // if (_cherenkov == 1) continue;
                     // if (_track_chi2x > track_limit[n_e] || _track_chi2y > track_limit[n_e]) continue;
                     // if (fd > fun->Eval(e_hit)) break;
@@ -159,10 +160,10 @@ int distribution() {
                     }
                     // if (energy2345 > limit_2345[n_e]) continue;
                     double tote = 0;
-                    for (int layer = 0; layer < 35; layer++) {
+                    for (int layer = 0; layer < 30; layer++) {
                         // if (layer == 6)
                         //     continue;
-                        tote += layer_energy->at(layer);
+                        tote += layer_hitno->at(layer);
                     }
                     // if (gRandom->Rndm() >= 0.1) {
                     hen[i][n_e]->Fill(tote);
@@ -186,7 +187,7 @@ int distribution() {
         pad1->cd();
         TH1D *hframe = new TH1D("hframe", "hframe", nbins[n_e], ranges[n_e], rangee[n_e]);
         hframe->SetTitle(TString::Format("%d GeV e-", int(energy[n_e])));
-        NameAxis(hframe, "Energy [MeV]", "Event Number");
+        NameAxis(hframe, "#Hit", "Event Number");
         FormatData(hframe);
         double ymax = hen[0][n_e]->GetBinContent(hen[0][n_e]->GetMaximumBin());
         hframe->GetYaxis()->SetRangeUser(0, 1.5 * ymax);

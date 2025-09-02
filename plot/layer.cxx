@@ -12,20 +12,21 @@
 using namespace std;
 
 int layer() {
-    // double energy_array[6] = {0.5, 1, 2, 3, 4, 5};
+    // double energy[6] = {0.5, 1, 2, 3, 4, 5};
     // double energy_array[9] = {10, 20, 30, 40, 50, 60, 70, 80, 100};
     // int rms_limit[6] = {100, 200, 300, 400, 400, 500};
     double energy[11] = {1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 15};
+    double limit_2345[11] = {7, 15, 20, 25, 35, 40, 45, 50, 60, 70, 90};
     int rms_limit[11] = {300, 600, 1000, 1200, 1500, 1700, 2000, 2200, 2500, 2700, 3000};
     const int n_total = 11;
-    TString pdfname = "pi-figure/layer_profile40_PS_energy_3008.pdf";
+    TString pdfname = "pi-figure/layer_profile40_PS_energy_3008_cherenkov2345_noise2.pdf";
     TCanvas *c = new TCanvas("c", "c", 4096, 4096);
-    TString fname[2] = {"/home/diaohb/CEPC/AHCAL-simulation/run/0422_30080126_trigger40/list_PS_birks/calib_analyse.root", "/home/diaohb/CEPC/ihep/PS/analyse/intercept/pi-list_analyse.root"};
-    TString _fname[2] = {"/home/diaohb/CEPC/AHCAL-simulation/run/0422_30080126_trigger40/list_PS_birks/calib_analyse.root", "/home/diaohb/CEPC/ihep/PS/analyse/intercept/pi-list_analyse.root"};
-    // TString fname[2] = {"/cefs/higgs/diaohb/SIM/cern-testbeam-simulation-for-scecal-and-ahcal/run/0305_25000126_trigger40/list_PS_nosipm/calib_analyse.root", "/cefs/higgs/diaohb/SIM/cern-testbeam-simulation-for-scecal-and-ahcal/run/0304_25000126_trigger40/list_PS_nosipm/calib_analyse.root"};
-    // TString _fname[2] = {"/cefs/higgs/diaohb/SIM/cern-testbeam-simulation-for-scecal-and-ahcal/run/0305_25000126_trigger40/list_PS_nosipm/calib_analyse.root", "/cefs/higgs/diaohb/SIM/cern-testbeam-simulation-for-scecal-and-ahcal/run/0304_25000126_trigger40/list_PS_nosipm/calib_analyse.root"};
+    TString fname[2] = {"/home/diaohb/CEPC/AHCAL-simulation/run/0422_30080126_trigger40/list_PS_noise2/calib_analyse.root", "/home/diaohb/CEPC/ihep/PS/analyse/intercept/pi-list_analyse.root"};
+    TString _fname[2] = {"/home/diaohb/CEPC/AHCAL-simulation/run/0422_30080126_trigger40/list_PS_noise2/calib_analyse.root", "/home/diaohb/CEPC/ihep/PS/analyse/intercept/pi-list_analyse.root"};
+    // TString fname[2] = {"/home/diaohb/CEPC/AHCAL-simulation/run/0405_30080126_trigger40/list_PS9/calib_analyse.root", "/home/diaohb/CEPC/ihep/PS/analyse/intercept/e-list_analyse.root"};
+    // TString _fname[2] = {"/home/diaohb/CEPC/AHCAL-simulation/run/0405_30080126_trigger40/list_PS9/calib_analyse.root", "/home/diaohb/CEPC/ihep/PS/analyse/intercept/e-list_analyse.root"};
     int color[2] = {4, 2};
-    TString name[2] = {"sim", ""};
+    TString name[2] = {"sim", "data"};
     double parameters[6][2] = {{0.2, -0.3}, {0.35, -0.3}, {0.45, -0.25}, {0.5, -0.2}, {0.6, -0.2}, {0.6, -0.15}};
     TF1 *fun = new TF1("fun", "[0]+[1]*x", 0, 10);
     TFile *fin, *_fin;
@@ -56,6 +57,7 @@ int layer() {
         double rms = 0;
         double fd = 0;
         double e_hit = 0;
+        int cherenkov = 0;
         tin->SetBranchAddress("beam_energy", &beam_energy);
         tin->SetBranchAddress("layer", &layer);
         tin->SetBranchAddress("layer_energy", &layer_energy);
@@ -66,7 +68,7 @@ int layer() {
         tin->SetBranchAddress("rms", &rms);
         tin->SetBranchAddress("FD", &fd);
         tin->SetBranchAddress("E_Hit", &e_hit);
-
+        tin->SetBranchAddress("cherenkov", &cherenkov);
         _fin = TFile::Open(_fname[mode], "READ");
         _tin = (TTree *) _fin->Get("tanalyse");
         double _beam_energy = 0;
@@ -79,6 +81,7 @@ int layer() {
         double _rms = 0;
         double _fd = 0;
         double _e_hit = 0;
+        int _cherenkov = 0;
         _tin->SetBranchAddress("beam_energy", &_beam_energy);
         _tin->SetBranchAddress("layer", &_layer);
         _tin->SetBranchAddress("layer_energy", &_layer_energy);
@@ -89,6 +92,7 @@ int layer() {
         _tin->SetBranchAddress("rms", &_rms);
         _tin->SetBranchAddress("FD", &_fd);
         _tin->SetBranchAddress("E_Hit", &_e_hit);
+        _tin->SetBranchAddress("cherenkov", &_cherenkov);
 
         for (int nentries = 0; nentries < _tin->GetEntries(); nentries++) {
             _tin->GetEntry(nentries);
@@ -96,6 +100,7 @@ int layer() {
             for (int n_e = 0; n_e < n_total; n_e++) {
                 fun->SetParameters(parameters[n_e]);
                 if (_beam_energy == energy[n_e] && _select_flag == 6 && _rms < rms_limit[n_e]) {
+                    if (_cherenkov == 1) continue;
                     n1[n_e][mode]++;
                     // int a = 0;
                     // for (int i = 0; i < _layer->size(); i++)
@@ -116,6 +121,13 @@ int layer() {
                     // }
                     // if (flag == 0)
                     //     continue;
+
+                    double energy2345 = 0;
+                    // int flag = 1;
+                    for (int layer = 2; layer <= 5; layer++) {
+                        energy2345 += layer_energy->at(layer);
+                    }
+                    if (energy2345 > limit_2345[n_e]) continue;
                     n2[n_e][mode]++;
                     for (int i = 0; i < layer_energy->size(); i++) {
                         if (layer_energy->at(i) > 0.)
@@ -182,7 +194,7 @@ int layer() {
             s_suffix = "(";
         if (n_e == n_total - 1)
             s_suffix = ")";
-        c->Print(pdfname + s_suffix, "Title:" + senergy + "GeV e-");
+        c->Print(pdfname + s_suffix, "Title:" + senergy + "GeV pi-");
     }
     return 1;
 }

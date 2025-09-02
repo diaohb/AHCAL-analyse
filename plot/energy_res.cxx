@@ -17,7 +17,7 @@ int energy_res() {
     gStyle->SetPadTopMargin(0.15);
     gStyle->SetTitleOffset(1.2, "xyz");
     gStyle->SetOptTitle(1);
-    double fit_range[2] = {2, 12};
+    double fit_range[2] = {1, 15};
     TCanvas *c = new TCanvas("c", "c", 900, 800);
     TGraph *gr1 = new TGraph();
     TGraph *gr2 = new TGraph();
@@ -27,8 +27,8 @@ int energy_res() {
     TGraph *gr31 = new TGraph();
     TGraph *grframe = new TGraph();
 
-    ifstream in("pi-txt/energy_PS_3008_cherenkov.txt", ios::in);
-    TString outfile = "pi-figure/energy_res_PS_3008_cherenkov.pdf";
+    ifstream in("txt/trigger40_PS_energy_3008_cherenkov2345_hitno_noise1_HP.txt", ios::in);
+    TString outfile = "figure/hitno_res_PS_3008_cherenkov2345_noise1_HP.pdf";
     while (!in.eof()) {
         double energy = 0, mean = 0, sigma = 0;
         // string mode;
@@ -58,7 +58,7 @@ int energy_res() {
     // grframe->GetYaxis()->SetTitle("#sigma(E)/E(%)");
     // grframe->SetTitle("Energy Linearity");
     // grframe->SetTitle("Energy Resolution");
-    grframe->GetXaxis()->SetRangeUser(0, 20);
+    grframe->GetXaxis()->SetRangeUser(0, 5);
     // grframe->GetXaxis()->SetLabelSize(0);
     grframe->GetYaxis()->SetRangeUser(0.00, 100);
     grframe->GetYaxis()->SetMaxDigits(3);
@@ -67,9 +67,10 @@ int energy_res() {
     TF1 *fun1 = new TF1("fun1", "(([0])^2/x+[1]^2)^0.5", 0, 100);
     // TF1 *fun12 = new TF1("fun12", "(([0])^2/x+[1]^2)^0.5", 0, 100);
     fun1->SetNpx(10000);
-    fun1->SetParameters(0.23, 0.002);
+    fun1->SetParameters(0.5);
     gr1->Fit(fun1, "0", "", fit_range[0], fit_range[1]);
     TString s1, s2, s3;
+    // s1.Form("data: #frac{%.2f%%}{#sqrt{E}}", abs(fun1->GetParameter(0)));
     s1.Form("data: #frac{%.2f%%}{#sqrt{E}} #oplus %.2f%%", abs(fun1->GetParameter(0)), abs(fun1->GetParameter(1)));
     // s1.Form("data");
     FormatData(gr1, 2, 20);
@@ -78,6 +79,7 @@ int energy_res() {
     fun1->DrawCopy("lsame");
 
     gr2->Fit(fun1, "0", "", fit_range[0], fit_range[1]);
+    // s2.Form("MC digi: #frac{%.2f%%}{#sqrt{E}}", abs(fun1->GetParameter(0)));
     s2.Form("digi: #frac{%.2f%%}{#sqrt{E}} #oplus %.2f%%", abs(fun1->GetParameter(0)), abs(fun1->GetParameter(1)));
     // s2.Form("digi");
     FormatData(gr2, 1, 21);
@@ -87,6 +89,7 @@ int energy_res() {
     fun1->DrawCopy("lsame");
 
     gr3->Fit(fun1, "0", "", fit_range[0], fit_range[1]);
+    // s3.Form("MC truth: #frac{%.2f%%}{#sqrt{E}}", abs(fun1->GetParameter(0)));
     s3.Form("truth: #frac{%.2f%%}{#sqrt{E}} #oplus %.2f%%", abs(fun1->GetParameter(0)), abs(fun1->GetParameter(1)));
     // s3.Form("truth");
     FormatData(gr3, 3, 21);

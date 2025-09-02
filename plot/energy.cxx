@@ -21,19 +21,21 @@ int energy() {
     TGraph *gr2 = new TGraph();
     TGraph *gr3 = new TGraph();
     TGraph *grframe = new TGraph();
+    double fit_range[2] = {0.5, 15};
 
-    ifstream in("pi-txt/energy_PS_3008_ehit.txt", ios::in);
-    TString outfile = "pi-figure/energy_PS_3008_ehit.pdf";
+    ifstream in("txt/energy_PS_3008_cherenkov2345_noise1_HP.txt", ios::in);
+    TString outfile = "figure/energy_PS_3008_cherenkov2345_noise1_HP.pdf";
     while (!in.eof()) {
         double energy = 0, mean = 0, sigma = 0;
         // string mode;
         int mode;
         in >> mode >> energy >> mean >> sigma;
+        // cout << mode << endl;
         if (in.fail()) break;
         if (energy == 0) energy = 0.5;
-        if (mode == 0) gr1->AddPoint(energy, mean);
-        if (mode == 1) gr2->AddPoint(energy, mean);
-        if (mode == 2) gr3->AddPoint(energy, mean);
+        if (mode == 0) gr1->AddPoint(energy, mean);/// 18.01);
+        if (mode == 1) gr2->AddPoint(energy, mean);/// 18.05);
+        if (mode == 2) gr3->AddPoint(energy, mean);/// 18.13);
     }
     // for(int i=0;i<11;i++){
     //     double tmp=sigma_data[i]/energy_data[i];
@@ -52,12 +54,12 @@ int energy() {
     grframe->AddPoint(0, 0);
     grframe->AddPoint(100, 1000);
     grframe->GetXaxis()->SetTitle("Beam Energy [GeV]");
-    grframe->GetYaxis()->SetTitle("mean [MeV]");
+    grframe->GetYaxis()->SetTitle("Rec Energy [GeV]");
     grframe->GetXaxis()->CenterTitle();
     grframe->GetYaxis()->CenterTitle();
     grframe->SetTitle("Energy Linearity");
-    grframe->GetXaxis()->SetRangeUser(0, 15);
-    grframe->GetYaxis()->SetRangeUser(0, 300);
+    grframe->GetXaxis()->SetRangeUser(0, 6);
+    grframe->GetYaxis()->SetRangeUser(0, 150);
     grframe->GetYaxis()->SetMaxDigits(3);
     grframe->GetXaxis()->SetLabelSize(0);
     grframe->GetXaxis()->SetTitleSize(0);
@@ -69,10 +71,10 @@ int energy() {
     fun1->SetNpx(10000);
     // fun1->SetParameters(0.23,0.002);
     // fun12->SetParameters(0.25,0.01);
-    gr1->Fit(fun1, "0", "", 2, 12);
+    gr1->Fit(fun1, "0", "", fit_range[0], fit_range[1]);
     TString s1, s2, s3;
     s1.Form("data: %.2f x+%.2f", fun1->GetParameter(1), fun1->GetParameter(0));
-    // s1.Form("data: #frac{%.3f}{#sqrt{E}}#oplus%.3f",fun1->GetParameter(0),fun1->GetParameter(1));
+    // s1.Form("data: %.2f x", fun1->GetParameter(0));
     FormatData(gr1, 2, 20);
     gr1->SetTitle(s1);
     // gr1->SetMarkerSize(0.8);
@@ -82,8 +84,9 @@ int energy() {
         gr1->SetPointY(i, -100 + 100 * gr1->GetPointY(i) / fun1->Eval(gr1->GetPointX(i)));
     }
 
-    gr2->Fit(fun1, "0", "", 2, 12);
+    gr2->Fit(fun1, "0", "", fit_range[0], fit_range[1]);
     s2.Form("digi: %.2f x+%.2f", fun1->GetParameter(1), fun1->GetParameter(0));
+    // s2.Form("digi: %.2f x", fun1->GetParameter(0));
     // s2.Form("MC: #frac{%.3f}{#sqrt{E}}#oplus%.3f",fun12->GetParameter(0),fun12->GetParameter(1));
     FormatData(gr2, 1, 21);
     gr2->SetTitle(s2);
@@ -95,8 +98,9 @@ int energy() {
         gr2->SetPointY(i, -100 + 100 * gr2->GetPointY(i) / fun1->Eval(gr2->GetPointX(i)));
     }
 
-    gr3->Fit(fun1, "0", "", 2, 12);
+    gr3->Fit(fun1, "0", "", fit_range[0], fit_range[1]);
     s3.Form("truth: %.2f x+%.2f", fun1->GetParameter(1), fun1->GetParameter(0));
+    // s3.Form("truth: %.2f x", fun1->GetParameter(0));
     // s2.Form("MC: #frac{%.3f}{#sqrt{E}}#oplus%.3f",fun12->GetParameter(0),fun12->GetParameter(1));
     FormatData(gr3, 3, 21);
     gr3->SetTitle(s3);
@@ -116,7 +120,7 @@ int energy() {
     grframe->GetXaxis()->SetLabelSize(0.06);
     grframe->GetYaxis()->SetNdivisions(505);
     grframe->GetYaxis()->SetTitle("residual [%]");
-    grframe->GetYaxis()->SetRangeUser(-10, 10);
+    grframe->GetYaxis()->SetRangeUser(-5, 5);
     grframe->GetXaxis()->SetTitleSize(0.07);
     grframe->Draw("ap");
     gr1->Draw("p");
