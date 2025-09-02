@@ -43,6 +43,7 @@ public:
     int AnaBeam(string str_dat, string str_ped, string str_dac, string str_MIP, string output_file);
     int EnergyCalib(string str_dat, string str_ped, string str_dac, string str_MIP, string output_file);
     int Digitize(string str_dat, string str_ped, string str_dac, string str_MIP, string str_SPE, string str_lowgain_dac, string sipm_model, string output_file);
+    int Digi_Event(vector<int> *hitTag, vector<int> *cellid, vector<double> *HG_Charge, vector<double> *LG_Charge, vector<double> *Hit_E, vector<int> *CellID);
     int digi(double energy, double sipm_energy, double &HG, double &LG, int i);
     int neEnergyCalib(string str_dat, string str_MIP, string output_file, string mode);
     int nCorrect(string str_dat, string str_MIP, string str_SPE, string output_file);
@@ -64,10 +65,12 @@ public:
     int MIPlist(const string _list);
     int PEDlist(const string _list, const string ishittag = "0");
     int MIPlist(const string _list, string pedestal);
+    int MIPlist(const string _list, string pedestal, string result_path);
     int MIP(vector<int> *_cellid, vector<double> *_HG_Charge);
     int MIP(vector<int> *_cellid, vector<int> *hitTag);
-    int MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *_HG_Charge, vector<int> *noise_cellid, vector<double> *noise_hit);
     int MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *_HG_Charge);
+    int MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *_HG_Charge, vector<int> *noise_cellid, vector<double> *noise_hit);
+    int MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *_HG_Charge, vector<double> *_LG_Charge, vector<int> *noise_cellid, vector<double> *noise_hit, vector<double> *noise_lg);
 
 private:
     //    Event* EventClass;

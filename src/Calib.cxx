@@ -42,6 +42,7 @@ int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string
     const double ref_ped_time = 390;
     const double ref_ped_charge = 384;
     const double ref_MIP = 344.3;
+    const double ref_gain_plat = 2927;
     const double ref_gain_ratio = 26;
     // const int lowgain_plat = 2000;
     int CellID = 0;
@@ -110,10 +111,10 @@ int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string
     tree_in->SetBranchAddress("intercept", &intercept);
     for (int i = 0; i < tree_in->GetEntries(); ++i) {
         tree_in->GetEntry(i);
-        decode_cellid(CellID,layer,chip,channel);
+        decode_cellid(CellID, layer, chip, channel);
         //cout<<layer<<" "<<chip<<" "<<channel<<" "<<slope<<" "<<endl;
-        gain_ratio[layer][chip][channel]=slope;
-        gain_plat[layer][chip][channel]=plat;
+        gain_ratio[layer][chip][channel] = slope;
+        gain_plat[layer][chip][channel] = plat;
         gain_intercept[layer][chip][channel] = intercept;
         if (gain_ratio[layer][chip][channel] < 10 || gain_ratio[layer][chip][channel] > 50)
             cout << CellID << " abnormal gain ratio " << layer << " " << chip << " " << channel << " " << slope << endl;
@@ -162,6 +163,8 @@ int raw2Root::EnergyCalib(string str_dat, string str_ped, string str_dac, string
                 if (ped_charge[i_layer][i_chip][i_chan] < 0) ped_charge[i_layer][i_chip][i_chan] = ref_ped_charge;
                 if (MIP[i_layer][i_chip][i_chan] < 100 || MIP[i_layer][i_chip][i_chan] > 600) MIP[i_layer][i_chip][i_chan] = ref_MIP;
                 if (gain_ratio[i_layer][i_chip][i_chan] < 20 || gain_ratio[i_layer][i_chip][i_chan] > 40) gain_ratio[i_layer][i_chip][i_chan] = ref_gain_ratio;
+                if (gain_plat[i_layer][i_chip][i_chan] < 0)
+                    gain_plat[i_layer][i_chip][i_chan] = ref_gain_plat;
                 //cout<<i_layer<<" "<<i_chip<<" "<<i_chan<<endl;
                 //cout<<ped_time[i_layer][i_chip][i_chan]<<" "<<ped_time[i_layer][i_chip][i_chan]<<" "<<MIP[i_layer][i_chip][i_chan]<<" "<<gain_ratio[i_layer][i_chip][i_chan]<<endl;
             }

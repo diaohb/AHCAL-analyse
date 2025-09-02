@@ -42,6 +42,9 @@ int main(int argc, char *argv[]) {
     double R[10] = {0};
     int particleID = 0;
     int cherenkov = 0;
+    double track_chi2x = 0;
+    double track_chi2y = 0;
+    int cont_layers = 0;
     vector<double> *layer_energy = 0;
     vector<double> *layer_rms = 0;
     vector<double> *layer_hitno = 0;
@@ -53,6 +56,7 @@ int main(int argc, char *argv[]) {
     vector<double> *layer_max_energy = 0;
     vector<double> *layer_max_x = 0;
     vector<double> *layer_max_y = 0;
+    vector<int> *clusters = 0;
 
     tanalyse->Branch("beam_energy", &beam_energy);
     tanalyse->Branch("total_energy", &total_energy);
@@ -83,6 +87,10 @@ int main(int argc, char *argv[]) {
     tanalyse->Branch("FD", &FD);
     tanalyse->Branch("E_Hit", &E_Hit);
     // tanalyse->Branch("R", &R, "R[10]/D");
+    tanalyse->Branch("track_chi2x", &track_chi2x);
+    tanalyse->Branch("track_chi2y", &track_chi2y);
+    tanalyse->Branch("clusters", &clusters);
+    tanalyse->Branch("cont_layers", &cont_layers);
 
     for (int l = 0; l < 40; l++) {
         layer->push_back(l);
@@ -93,6 +101,8 @@ int main(int argc, char *argv[]) {
             particleID = 1;
         } else if (tmp.find("pi-") != tmp.npos) {
             particleID = 2;
+        } else if (tmp.find("mu-") != tmp.npos) {
+            particleID = 3;
         }
         string beamenergy = tmp;
         // beamenergy = beamenergy.substr(0,beamenergy.find_last_of('/'));
@@ -113,7 +123,7 @@ int main(int argc, char *argv[]) {
         hbase->Clear();
         hbase->ReadTree(tmp, "EventTree");
 
-        int flag[10] = {0};
+        int flag[11] = {0};
         for (int ientry = 0; ientry < hbase->tin->GetEntries(); ientry++) {
             hbase->tin->GetEntry(ientry);
             if (ientry % 10000 == 0) cout << ientry << " / " << hbase->tin->GetEntries() << endl;
@@ -126,6 +136,7 @@ int main(int argc, char *argv[]) {
             layer_max_x->clear();
             layer_max_y->clear();
             layer_rms->clear();
+            clusters->clear();
             // cellid->clear();
             // hit_energy->clear();
             // f_15 = 0;
@@ -140,18 +151,22 @@ int main(int argc, char *argv[]) {
             select.GetLayerRMS(layer_rms);
             FD = select.GetFD();
             E_Hit = select.GetE_Hit();
+            track_chi2x = select.GetTrackChi2x();
+            track_chi2y = select.GetTrackChi2y();
             select.GetR_alpha(R);
             shower_start = select.GetShower_Start();
             shower_end = select.GetShower_End();
             select.GetCenter(layer_hit_x, layer_hit_y);
             // select.GetHitEnergy(cellid, hit_energy);
             select.GetMax(layer_max_energy, layer_max_x, layer_max_y, shower_max);
+            select.GetCluster(clusters);
+            cont_layers = select.GetContLayers();
             flag[result]++;
             select_flag = result;
             if (hbase->Cherenkov && hbase->Cherenkov->size() == 2 && hbase->Cherenkov->at(0) >= 0) {
                 cherenkov = hbase->Cherenkov->at(0) * hbase->Cherenkov->at(1);
             } else {
-                cherenkov = -1;
+                cherenkov = bool(particleID == 1);
             }
             tanalyse->Fill();
         }

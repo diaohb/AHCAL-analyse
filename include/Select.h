@@ -1,5 +1,6 @@
 #ifndef SELECT_HH
 #define SELECT_HH
+#include "TGraph.h"
 #include <TF1.h>
 #include <TLinearFitter.h>
 #include <unordered_map>
@@ -18,6 +19,9 @@ public:
     double GetShower_End() { return shower_end; }
     double GetE_Hit() { return E_hit; }
     double GetFD() { return fd; }
+    double GetTrackChi2x() { return track_chi2x; }
+    double GetTrackChi2y() { return track_chi2y; }
+    double GetContLayers() { return cont_layers; }
     void GetR_alpha(double *_R) {
         for (int i = 0; i < 10; i++)
             _R[i] = R[i];
@@ -43,6 +47,13 @@ public:
     }
     void ResetEvent(vector<double> *_Hit_X, vector<double> *_Hit_Y, vector<double> *_Hit_Z, vector<double> *_Hit_Energy, double a, int _particleID = 1);
 
+    void GetCluster(vector<int> *&_clusters) {
+        _clusters->assign(cluster_size.begin(), cluster_size.end());
+        // for (int i = 0; i < clusters.size(); i++) {
+        //     _clusters->push_back(clusters[i].size());
+        // }
+    }
+
 private:
     void Init();
     void EnergyCenter();
@@ -54,12 +65,17 @@ private:
     void E_Hit();
     void FD();
     double R_alpha(int alpha);
+    void FindTrack();
+    void FindCluster();
+    void dfs(int x, int y, int z, vector<int> &cluster);
+    void EvalEnergy();
 
     const double MIP_E = 0.461;//MeV
     int particleID = 1;
-    int range[2] = {100, 360};
-    int shower_start_ref[2] = {10, 10};
-    int shower_end_ref[2] = {25, 35};
+    const int range[3] = {100, 260, 360};
+    const int layer_range[3] = {25, 38, 40};
+    const int shower_start_ref[3] = {5, 5, 10};
+    const int shower_end_ref[3] = {25, 35, 35};
 
     vector<int> CellID;
     vector<double> Hit_X;
@@ -92,6 +108,21 @@ private:
     double shower_max = 0;
     double tenergy = 0;
     double beam_energy = 0;
+    double track_chi2x = 0;
+    double track_chi2y = 0;
+    int cont_layers = 0;
+    // bool ishit[5][5][25];
+    vector<vector<vector<int>>> is_hit;
+    vector<vector<vector<bool>>> is_visited;
+    vector<vector<int>> clusters;
+    vector<int> cluster_size;
+    int dx[28] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0};
+    int dy[28] = {0, 1, 1, 0, 0, -1, -1, -1, 1, 0, 1, -1, 0, 1, -1, -1, 1, 0, 1, 1, 0, 0, -1, -1, -1, 1, 0, 0};
+    int dz[28] = {0, 0, 1, 1, -1, -1, 0, 1, -1, 1, 0, 0, -1, 1, -1, 1, -1, 0, 0, 1, 1, -1, -1, 0, 1, -1, -2, 2};
+    TGraph *grx = new TGraph();
+    TGraph *gry = new TGraph();
+    TLinearFitter *fitterx = new TLinearFitter(1, "pol1");
+    TLinearFitter *fittery = new TLinearFitter(1, "pol1");
     // TLinearFitter *fitter = new TLinearFitter();
     unordered_map<int, bool> m_hit;
     TF1 *fhitnocut = new TF1("fhitnocut", "372.285*(1-exp(-0.0064584*x))", 0, 350);
@@ -108,6 +139,9 @@ private:
     unordered_map<double, int> hitlayercut_up[2] = {
             {{0.5, 10}, {1, 13}, {2, 16}, {3, 18}, {4, 18}, {5, 20}, {6, 20}, {7, 21}, {8, 22}, {10, 22}, {12, 23}, {15, 24}, {20, 15}, {30, 15}, {40, 16}, {50, 17}, {60, 18}, {70, 18}, {80, 20}, {100, 20}, {120, 20}, {150, 20}, {250, 22}},
             {{1, 37}, {2, 37}, {3, 37}, {4, 37}, {5, 37}, {6, 37}, {7, 37}, {8, 37}, {10, 37}, {12, 37}, {15, 37}}};
+    unordered_map<double, int> cont_layers_cut[2] = {
+            {{0.5, 3}, {1, 4}, {2, 6}, {3, 8}, {4, 9}, {5, 9}, {6, 22}, {7, 25}, {8, 27}, {10, 30}, {12, 36}, {15, 42}, {20, 60}, {30, 80}, {40, 100}, {50, 110}, {60, 120}, {70, 140}, {80, 150}, {100, 170}, {120, 200}, {150, 230}, {250, 320}},
+            {{1, 1}, {2, 1}, {3, 5}, {4, 6}, {5, 8}, {6, 9}, {7, 10}, {8, 11}, {10, 12}, {12, 13}, {15, 14}}};
 };
 
 

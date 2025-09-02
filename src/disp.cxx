@@ -1,3 +1,4 @@
+#include "Global.h"
 #include "TApplication.h"
 #include "TAxis.h"
 #include "TCanvas.h"
@@ -22,18 +23,24 @@ int main(int argc, char *argv[]) {
     int n = stoi(nentries);
     TTree *tin = (TTree *) fin->Get("EventTree");
     vector<double> *Hit_Energy = 0;
-    vector<int> *cellid = 0;
-    vector<double> *Hit_X = 0;
-    vector<double> *Hit_Y = 0;
-    vector<double> *Hit_Z = 0;
-    // tin->SetBranchAddress("CellID",&cellid);
-    tin->SetBranchAddress("Hit_Energy", &Hit_Energy);
-    tin->SetBranchAddress("Hit_X", &Hit_X);
-    tin->SetBranchAddress("Hit_Y", &Hit_Y);
-    tin->SetBranchAddress("Hit_Z", &Hit_Z);
+    vector<double> *HG_Charge = 0;
+    vector<int> *HitTag = 0;
+    vector<int> *CellID = 0;
+    int file_flag = 0;
+    if (tin) {
+        file_flag = 0;
+        tin->SetBranchAddress("CellID", &CellID);
+        tin->SetBranchAddress("Hit_Energy", &Hit_Energy);
+    } else {
+        file_flag = 1;
+        tin = (TTree *) fin->Get("Raw_Hit");
+        tin->SetBranchAddress("CellID", &CellID);
+        tin->SetBranchAddress("HG_Charge", &HG_Charge);
+        tin->SetBranchAddress("HitTag", &HitTag);
+    }
 
     TH3D *h_display = new TH3D("display", "display", 400, 0, 1200, 18, -360, 360, 18, -360, 360);
-    h_display->GetXaxis()->SetRangeUser(0, 800);
+    // h_display->GetXaxis()->SetRangeUser(0, 800);
     // h_display->GetYaxis()->SetRangeUser(-120,120);
     // h_display->GetZaxis()->SetRangeUser(-120,120);
     TCanvas *c = new TCanvas("c", "c", 48, 130, 1000, 723);
@@ -45,8 +52,8 @@ int main(int argc, char *argv[]) {
     // c->SetFillColor(0);
     // c->SetBorderMode(0);
     // c->SetBorderSize(2);
-    // c->SetTheta(7.278371);
-    // c->SetPhi(43.0265);
+    c->SetTheta(40);
+    c->SetPhi(16);
     // c->SetFrameBorderMode(0);
     // gStyle->SetCanvasPreferGL(1);
     // h_display->GetXaxis()->SetNdivisions(40);
@@ -58,12 +65,21 @@ int main(int argc, char *argv[]) {
         tin->GetEntry(n);
         h_display->SetTitle("entries_" + TString(nentries));
         h_display->Reset();
-        for (int i = 0; i < Hit_Energy->size(); i++) {
-            if (Hit_Energy->at(i) > 0.5 * MIP_E) {
-                double e = Hit_Energy->at(i);
-                e = log(e + 1) + 10;
-                h_display->Fill(Hit_Z->at(i), Hit_X->at(i), Hit_Y->at(i), e);
+        for (int i = 0; i < CellID->size(); i++) {
+            // if (Hit_Energy->at(i) > 0.5 * MIP_E) {
+            double e = 0, x = 0, y = 0, z = 0;
+            int cellid = CellID->at(i);
+            x = Pos_X_1(cellid);
+            y = Pos_Y_1(cellid);
+            z = cellid / 1E5 * 30;
+            if (file_flag && HitTag->at(i) == 1) {
+                e = HG_Charge->at(i);
+            } else if (Hit_Energy->at(i) > 0.5 * MIP_E) {
+                e = Hit_Energy->at(i);
+                e = log(e + 1) + 5;
             }
+            h_display->Fill(z, x, y, e);
+            // }
         }
         // h_display->SetMinimum(20);
         h_display->Draw("box2");

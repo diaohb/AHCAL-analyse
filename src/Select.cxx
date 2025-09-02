@@ -1,5 +1,6 @@
 #include "Select.h"
 #include "Global.h"
+#include "TGraph.h"
 #include <algorithm>
 using namespace std;
 Select::Select() {
@@ -32,7 +33,11 @@ void Select::ResetEvent(vector<double> *_Hit_X, vector<double> *_Hit_Y, vector<d
     fill(R, R + 10, 0);
     fill(ishit, ishit + 40, 0);
     fill(layerhitno, layerhitno + 40, 0);
-
+    // fill(iscluster, iscluster + 5 * 5 * 25, 0);
+    is_hit.assign(40, vector<vector<int>>(9, vector<int>(36, 0)));
+    is_visited.assign(40, vector<vector<bool>>(9, vector<bool>(36, false)));
+    clusters.clear();
+    cluster_size.clear();
     hitno = 0;
     hitlayer = 0;
     big_hitno = 0;
@@ -45,6 +50,13 @@ void Select::ResetEvent(vector<double> *_Hit_X, vector<double> *_Hit_Y, vector<d
     shower_start = 0;
     shower_end = 0;
     shower_max = 0;
+    track_chi2x = 0;
+    track_chi2y = 0;
+    cont_layers = 0;
+    grx->Set(0);
+    gry->Set(0);
+    fitterx->ClearPoints();
+    fittery->ClearPoints();
     Init();
 }
 
@@ -66,11 +78,11 @@ void Select::Init() {
             }
             continue;
         }
-        int chip = 0, channel = 0;
-        inverse(Hit_X.at(i), Hit_Y.at(i), chip, channel);
+        // int chip = 0, channel = 0;
+        // inverse(Hit_X.at(i), Hit_Y.at(i), chip, channel);
         int layer = Hit_Z.at(i) / 30;
-        int cellid = layer * 1e5 + chip * 1e4 + channel;
-        CellID.push_back(cellid);
+        // int cellid = layer * 1e5 + chip * 1e4 + channel;
+        // CellID.push_back(cellid);
         true_hitno++;
         layerhitno[layer]++;
         lenergy[layer] += e;
@@ -80,6 +92,9 @@ void Select::Init() {
     MaxEnergy();
     E_Hit();
     FD();
+    FindTrack();
+    // FindCluster();
+    // EvalEnergy();
 }
 
 void Select::EnergyCenter() {
@@ -111,6 +126,10 @@ void Select::EnergyCenter() {
         // double erasee = 0;
         for (int i = 0; i < Hit_X.size(); i++) {
             int layer = Hit_Z.at(i) / 30;
+            int chip = 0, channel = 0;
+            // int layer = Hit_Z.at(i) / 30;
+            inverse(Hit_X.at(i), Hit_Y.at(i), chip, channel);
+            int cellid = layer * 1e5 + chip * 1e4 + channel;
             double e = Hit_Energy.at(i);
             double x = Hit_X.at(i) - tmp_x.at(layer);
             double y = Hit_Y.at(i) - tmp_y.at(layer);
@@ -120,16 +139,14 @@ void Select::EnergyCenter() {
                 // cout << CenterX.at(layer) << endl;
                 CenterX.at(layer) += Hit_X.at(i) * e;
                 CenterY.at(layer) += Hit_Y.at(i) * e;
-                int chip = 0, channel = 0;
-                inverse(Hit_X.at(i), Hit_Y.at(i), chip, channel);
-                // int layer = Hit_Z.at(i) / 30;
-                int cellid = layer * 1e5 + chip * 1e4 + channel;
                 CellID.push_back(cellid);
                 hitno++;
                 layerhitno[layer]++;
                 lenergy[layer] += e;
             }
+            is_hit[layer][chip][channel] = i + 1;
         }
+        // cout << lenergy[0] << endl;
         for (int i = 0; i < 40; i++) {
             if (lenergy[i] > 0) {
                 tenergy += lenergy[i];
@@ -155,6 +172,12 @@ void Select::EnergyCenter() {
     for (int i = 37; i >= 0; i--) {
         if (layerhitno[i] >= 4) {
             shower_end = i;
+            break;
+        }
+    }
+    for (int i = 0; i < 40; i++) {
+        if (layerhitno[i] == 0) {
+            cont_layers = i;
             break;
         }
     }
@@ -219,8 +242,10 @@ int Select::Result(double &total_energy, vector<double> *&layer_energy,
     layer_hitno->clear();
     for (int i = 0; i < 40; i++) {
         layer_hitno->push_back(layerhitno[i]);
-        _hitno += layer_hitno->at(i);
         layer_energy->push_back(lenergy[i]);
+    }
+    for (int i = 0; i < layer_range[particleID]; i++) {
+        _hitno += layer_hitno->at(i);
         total_energy += layer_energy->at(i);
     }
     if (total_energy < 0.5 * MIP_E) {
@@ -247,6 +272,9 @@ int Select::Result(double &total_energy, vector<double> *&layer_energy,
     // }
     if (layer_hitno->at(0) > 1 || layer_hitno->at(0) == 0) {
         return 8;
+    }
+    if (cont_layers < cont_layers_cut[particleID - 1][beam_energy]) {
+        return 10;
     }
     return 6;
 }
@@ -339,4 +367,135 @@ double Select::R_alpha(int _alpha) {
     }
     R_alpha = true_hitno / double(m_hit.size());
     return R_alpha;
+}
+void Select::FindTrack() {
+    for (int i = 2; i < 15; i++) {
+        if (CenterX.at(i) != -500) {
+            // grx->SetPoint(i, i, CenterX.at(i));
+            // gry->SetPoint(i, i, CenterY.at(i));
+            double x[1] = {double(i)};
+            fitterx->AddPoint(x, CenterX.at(i), 1 / sqrt(lenergy[i]));
+            fittery->AddPoint(x, CenterY.at(i), 1 / sqrt(lenergy[i]));
+        }
+    }
+    if (fitterx->GetNpoints() > 3) {
+        // grx->Fit("pol1", "q");
+        // gry->Fit("pol1", "q");
+        // track_chi2x = grx->GetFunction("pol1")->GetChisquare();
+        // track_chi2y = gry->GetFunction("pol1")->GetChisquare();
+        // track_chi2x /= grx->GetN();
+        // track_chi2y /= gry->GetN();
+        fitterx->Eval();
+        fittery->Eval();
+        track_chi2x = fitterx->GetChisquare();
+        // cout << track_chi2x << endl;
+        track_chi2y = fittery->GetChisquare();
+        track_chi2x /= fitterx->GetNpoints() - 2;
+        track_chi2y /= fittery->GetNpoints() - 2;
+    }
+}
+void Select::dfs(int layer, int chip, int channel, vector<int> &cluster) {
+    is_visited[layer][chip][channel] = true;
+    cluster.push_back(is_hit[layer][chip][channel] - 1);
+    // cluster.push_back(layer * 10000 + chip * 1000 + channel);
+    int x = (Pos_X(channel, chip) + 360) / 40;
+    int y = (Pos_Y(channel, chip) + 360) / 40;
+    // cout << layer << "  " << chip << "  " << channel << "  " << endl;
+    for (int i = 0; i < 28; i++) {
+        // cout << x << "  " << y << "  " << layer << "  seed" << endl;
+
+        int x_temp = x + dx[i];
+        int y_temp = y + dy[i];
+        int layer_temp = layer + dz[i];
+        inverse(x_temp * 40 - 340, y_temp * 40 - 340, chip, channel);
+
+        // cout << layer_temp << "  " << chip << "  " << channel << "  " << endl;
+        if (layer_temp >= 0 && layer_temp < 40 && chip >= 0 && chip < 9 && channel >= 0 && channel < 36 && is_hit[layer_temp][chip][channel] && !is_visited[layer_temp][chip][channel]) {
+            // cout << x << "  " << y << "  " << layer_temp << "  " << is_hit[layer_temp][chip][channel] << "  " << is_visited[layer_temp][chip][channel] << endl;
+            dfs(layer_temp, chip, channel, cluster);
+        }
+    }
+}
+void Select::FindCluster() {
+    for (int layer = 0; layer < 40; layer++) {
+        for (int chip = 0; chip < 9; chip++) {
+            for (int channel = 0; channel < 36; channel++) {
+                if (is_hit[layer][chip][channel] && !is_visited[layer][chip][channel]) {
+                    // cout << "new " << layer << " " << chip << "  " << channel << endl;
+                    vector<int> cluster;
+                    dfs(layer, chip, channel, cluster);
+                    clusters.push_back(cluster);
+                }
+            }
+        }
+    }
+    // cout << "******************************" << endl;
+    // cout << clusters.size() << endl;
+    // for (int i = 0; i < clusters.size(); i++) {
+    //     cout << clusters[i].size() << endl;
+    // }
+    // // for (int x = 0; x < 10; x++) {
+    // //     cout << x << ":\n";
+    // //     for (int y = 4; y < 5; y++) {
+    // //         for (int z = 0; z < 36; z++) {
+    // //             cout << is_hit[x][y][z] << " ";
+    // //         }
+    // //         cout << "\n";// 每行 y 换行
+    // //     }
+    // //     cout << "\n";// 每层 x 换行
+    // // }
+
+    // cout << "******************************" << endl;
+}
+void Select::EvalEnergy() {
+    int j = 0, max = 0;
+    for (int i = 0; i < clusters.size(); i++) {
+        int length = clusters[i].size();
+        cluster_size.push_back(length);
+        if (length > max) {
+            j = i;
+            max = length;
+        }
+    }
+    hitno = 0;
+    hitlayer = 0;
+    fill(CenterX.begin(), CenterX.end(), 0);
+    fill(CenterY.begin(), CenterY.end(), 0);
+    fill(layerhitno, layerhitno + 40, 0);
+    fill(lenergy, lenergy + 40, 0);
+    fill(ishit, ishit + 40, 0);
+    for (int i = 0; i < max; i++) {
+        int shift = clusters[j][i];
+        int layer = Hit_Z.at(shift) / 30;
+        double e = Hit_Energy.at(shift);
+        CenterX.at(layer) += Hit_X.at(shift) * e;
+        CenterY.at(layer) += Hit_Y.at(shift) * e;
+        hitno++;
+        layerhitno[layer]++;
+        lenergy[layer] += e;
+    }
+    for (int i = 0; i < 40; i++) {
+        if (layerhitno[i]) {
+            hitlayer++;
+            ishit[i] = 1;
+            CenterX.at(i) /= lenergy[i];
+            CenterY.at(i) /= lenergy[i];
+        } else {
+            ishit[i] = 0;
+            CenterX.at(i) = -500;
+            CenterY.at(i) = -500;
+        }
+    }
+    for (int i = 0; i < 40; i++) {
+        if (layerhitno[i] >= 4) {
+            shower_start = i;
+            break;
+        }
+    }
+    for (int i = 37; i >= 0; i--) {
+        if (layerhitno[i] >= 4) {
+            shower_end = i;
+            break;
+        }
+    }
 }

@@ -24,12 +24,13 @@ void fit(TH1D *his, Double_t *fitrange, Double_t *startvalues, Double_t *parlimi
 int main(int argc, char *argv[]) {
     double start = clock();
     raw2Root tw;
-    tw.MIPlist(argv[1], argv[2]);
+    // cout << "start mip " << endl;
+    tw.MIPlist(argv[1], argv[2], argv[3]);
     double end = clock();
     cout << "end of mip : Time : " << (end - start) / CLOCKS_PER_SEC << endl;
     return 0;
 }
-int raw2Root::MIPlist(const string _list, string pedestal) {
+int raw2Root::MIPlist(const string _list, string pedestal, string result_path) {
     ReadList(_list);
     TFile *fin, *fout, *fout_noise;
     TTree *tin, *tout, *tout_noise;
@@ -52,8 +53,9 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
         tin->GetEntry(i);
         ped_high[CellID] = pedestal_high;
     }
-
-    fout = TFile::Open(TString(_list) + "_mip.root", "recreate");
+    string temp_str = _list.substr(_list.rfind("/"));
+    // cout << temp_str << endl;
+    fout = TFile::Open(TString(result_path + "/" + temp_str) + "_mip.root", "recreate");
     // fout_noise = TFile::Open(TString(_list) + "_noise.root", "recreate");
     unordered_map<int, TH1D *> mmip;
     unordered_map<int, TH1D *> mnoise;
@@ -75,15 +77,16 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
         }
     }
     tout = new TTree("MIP_Calibration", "MIP_Calibration");
-    // tout_noise = new TTree("Noise", "Noise");
+    tout_noise = new TTree("Noise", "Noise");
     double MPV = 0, width = 0, gaus_sigma = 0, max_x = 0, FWHM = 0, chi2_ndf = 0;
     int cellid = 0, entries = 0;
     int tag = 0;
-    // int hitno = 0;
+    int hitno = 0;
     // int _hitno[40][9][36];
 
     vector<int> *noise_cellid = new vector<int>;
     vector<double> *noise_hit = new vector<double>;
+    vector<double> *noise_lg = new vector<double>;
     tout->Branch("MPV", &MPV);
     tout->Branch("width", &width);
     tout->Branch("gaus_sigma", &gaus_sigma);
@@ -93,6 +96,7 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
     tout->Branch("FWHM", &FWHM);
     tout->Branch("chi2_ndf", &chi2_ndf);
     tout->Branch("Tag", &tag);
+
     // tout_noise->Branch("CellID", &cellid);
     // tout_noise->Branch("hitno", &hitno);
 
@@ -107,9 +111,10 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
     tout_run->Branch("layer_hit", &layer_hit, "layer_hit[40]/I");
     tout_run->Branch("hit_x", &hit_x);
     tout_run->Branch("hit_y", &hit_y);
-    // tout_run->Branch("CellID", &noise_cellid);
-    // tout_run->Branch("noise_hit", &noise_hit);
+    tout_run->Branch("CellID", &noise_cellid);
+    tout_run->Branch("noise_hit", &noise_hit);
     tout_run->Branch("noise_hitno", &noise_hitno);
+    tout_run->Branch("noise_lg", &noise_lg);
     for_each(list.begin(), list.end(), [&](string tmp) {
         cout<<"Reading: "<<tmp<<endl;
         fin=TFile::Open(TString(tmp),"read");
@@ -123,7 +128,8 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
             // cout<<n<<"  ";
             noise_cellid->clear();
             noise_hit->clear();
-            mip_flag = MIP(cellID, hitTag, HG_Charge, noise_cellid, noise_hit);
+            noise_lg->clear();
+            mip_flag = MIP(cellID, hitTag, HG_Charge,LG_Charge, noise_cellid, noise_hit,noise_lg);
             fill(layer_hit, layer_hit + 40, 0);
             if (mip_flag == 1)
             {
@@ -150,6 +156,7 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
                 noise_hitno = noise_cellid->size();
             }
             tout_run->Fill();
+            tout_noise->Fill();
         }
         fin->Close(); });
     TString dir = "histogram";
@@ -176,86 +183,86 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
 
             fout->mkdir(dir + "/" + slayer + "/" + schip);
             fout->cd(dir + "/" + slayer + "/" + schip);
-            fr[0] = 150;
-            fr[1] = 900;
-            sv[0] = 40;
-            sv[1] = 344;
-            sv[2] = mmip_chip[layer * 10 + chip]->Integral(50, 500);
-            sv[3] = 80;
-            pllo[0] = 10;
-            pllo[1] = 100;
-            pllo[2] = sv[2] / 50;
-            pllo[3] = 10;
-            plhi[0] = 100;
-            plhi[1] = 700;
-            plhi[2] = sv[2] * 10;
-            plhi[3] = 200;
+            // fr[0] = 150;
+            // fr[1] = 900;
+            // sv[0] = 40;
+            // sv[1] = 344;
+            // sv[2] = mmip_chip[layer * 10 + chip]->Integral(50, 500);
+            // sv[3] = 80;
+            // pllo[0] = 10;
+            // pllo[1] = 100;
+            // pllo[2] = sv[2] / 50;
+            // pllo[3] = 10;
+            // plhi[0] = 100;
+            // plhi[1] = 700;
+            // plhi[2] = sv[2] * 10;
+            // plhi[3] = 200;
 
-            if (sv[2] >= 1000) {
-                for (cut = 75; cut > 0; cut--) {
-                    if (mmip_chip[layer * 10 + chip]->GetBinContent(cut) < sv[2] / 400) {
-                        break;
-                    }
-                }
-                // cut += 5;
-                fr[0] = mmip_chip[layer * 10 + chip]->GetBinCenter(cut);
-                for (cut = 100; cut < 250; cut++) {
-                    if ((mmip_chip[layer * 10 + chip]->GetBinContent(cut) + mmip_chip[layer * 10 + chip]->GetBinContent(cut + 1)) < sv[2] / 500) {
-                        break;
-                    }
-                }
-                cut -= 10;
-                fr[1] = mmip_chip[layer * 10 + chip]->GetBinCenter(cut);
-                // g_mutex.lock();
-                langaufit(mmip_chip[layer * 10 + chip], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
-                // g_mutex.unlock();
-            }
-            sv[0] = fps[0];
-            sv[1] = fps[1];
-            sv[3] = fps[3];
+            // if (sv[2] >= 1000) {
+            //     for (cut = 75; cut > 0; cut--) {
+            //         if (mmip_chip[layer * 10 + chip]->GetBinContent(cut) < sv[2] / 400) {
+            //             break;
+            //         }
+            //     }
+            //     // cut += 5;
+            //     fr[0] = mmip_chip[layer * 10 + chip]->GetBinCenter(cut);
+            //     for (cut = 100; cut < 250; cut++) {
+            //         if ((mmip_chip[layer * 10 + chip]->GetBinContent(cut) + mmip_chip[layer * 10 + chip]->GetBinContent(cut + 1)) < sv[2] / 500) {
+            //             break;
+            //         }
+            //     }
+            //     cut -= 10;
+            //     fr[1] = mmip_chip[layer * 10 + chip]->GetBinCenter(cut);
+            //     // g_mutex.lock();
+            //     langaufit(mmip_chip[layer * 10 + chip], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
+            //     // g_mutex.unlock();
+            // }
+            // sv[0] = fps[0];
+            // sv[1] = fps[1];
+            // sv[3] = fps[3];
             mmip_chip[layer * 10 + chip]->Write();
             for (int channel = 0; channel < 36; channel++) {
                 cellid = layer * 1e5 + chip * 1e4 + channel;
-                entries = mmip[cellid]->Integral(50, 500);
-                sv[2] = entries;
-                pllo[2] = sv[2] / 50;
-                plhi[2] = sv[2] * 10;
-                if (sv[2] < 500) {
-                    tag = -2;
-                    tout->Fill();
-                    mmip[cellid]->Write();
-                    continue;
-                }
-                // for (cut = 75; cut > 25; cut--)
-                // {
-                //     if (mmip[cellid]->GetBinContent(cut) < sv[2] / 400)
-                //     {
+                // entries = mmip[cellid]->Integral(50, 500);
+                // sv[2] = entries;
+                // pllo[2] = sv[2] / 50;
+                // plhi[2] = sv[2] * 10;
+                // if (sv[2] < 500) {
+                //     tag = -2;
+                //     tout->Fill();
+                //     mmip[cellid]->Write();
+                //     continue;
+                // }
+                // // for (cut = 75; cut > 25; cut--)
+                // // {
+                // //     if (mmip[cellid]->GetBinContent(cut) < sv[2] / 400)
+                // //     {
+                // //         break;
+                // //     }
+                // // }
+                // // cut += 5;
+                // // fr[0] = mmip[cellid]->GetBinCenter(cut);
+                // for (cut = 100; cut < 250; cut++) {
+                //     if ((mmip[cellid]->GetBinContent(cut) + mmip[cellid]->GetBinContent(cut + 1)) < sv[2] / 500) {
                 //         break;
                 //     }
                 // }
-                // cut += 5;
-                // fr[0] = mmip[cellid]->GetBinCenter(cut);
-                for (cut = 100; cut < 250; cut++) {
-                    if ((mmip[cellid]->GetBinContent(cut) + mmip[cellid]->GetBinContent(cut + 1)) < sv[2] / 500) {
-                        break;
-                    }
-                }
-                cut -= 10;
-                fr[1] = mmip[cellid]->GetBinCenter(cut);
-                // g_mutex.lock();
-                langaufit(mmip[cellid], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
-                // g_mutex.unlock();
-                langaupro(fps, max_x, FWHM);
-                double x = mmip[cellid]->FindBin(max_x);
+                // cut -= 10;
+                // fr[1] = mmip[cellid]->GetBinCenter(cut);
+                // // g_mutex.lock();
+                // langaufit(mmip[cellid], fr, sv, pllo, plhi, fps, fpe, &chisqr, &ndf);
+                // // g_mutex.unlock();
+                // langaupro(fps, max_x, FWHM);
+                // double x = mmip[cellid]->FindBin(max_x);
                 mmip[cellid]->Write();
-                MPV = fps[1];
-                width = fps[0];
-                gaus_sigma = fps[3];
-                tag = 1;
-                chi2_ndf = chisqr / double(ndf);
-                if (chi2_ndf > 30 || x > fr[1] - 40 || gaus_sigma < 30 || gaus_sigma > 160 || width < 15 || width > 80) {
-                    tag = -3;
-                }
+                // MPV = fps[1];
+                // width = fps[0];
+                // gaus_sigma = fps[3];
+                // tag = 1;
+                // chi2_ndf = chisqr / double(ndf);
+                // if (chi2_ndf > 30 || x > fr[1] - 40 || gaus_sigma < 30 || gaus_sigma > 160 || width < 15 || width > 80) {
+                //     tag = -3;
+                // }
                 tout->Fill();
             }
         }
@@ -277,13 +284,14 @@ int raw2Root::MIPlist(const string _list, string pedestal) {
     fout->Close();
     return 1;
 }
-int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *highgain, vector<int> *noise_cellid, vector<double> *noise_hit) {
+int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *highgain, vector<double> *lowgain, vector<int> *noise_cellid, vector<double> *noise_hit, vector<double> *noise_lg) {
     for (int i = 0; i < _cellid->size(); i++) {
         int cid = _cellid->at(i);
         if (hitTag->at(i) == 0 || (hitTag->at(i) && cid / 100 % 100 != 0)) {
             _cellid->erase(_cellid->begin() + i);
             highgain->erase(highgain->begin() + i);
             hitTag->erase(hitTag->begin() + i);
+            lowgain->erase(lowgain->begin() + i);
             i--;
         }
     }
@@ -299,13 +307,25 @@ int raw2Root::MIP(vector<int> *_cellid, vector<int> *hitTag, vector<double> *hig
     }
     hit_x /= l;
     hit_y /= l;
+    double hit_x_1 = 0, hit_y_1 = 0;
+    for (int i = 0; i < l; i++) {
+        int cid = _cellid->at(i);
+        if (abs(Pos_X_1(cid) - hit_x) < 120 && abs(Pos_Y_1(cid) - hit_y) < 120) {
+            hit_x_1 += Pos_X_1(cid);
+            hit_y_1 += Pos_Y_1(cid);
+        }
+    }
+    hit_x_1 /= l;
+    hit_y_1 /= l;
     for (int i = 0; i < _cellid->size(); i++) {
         int cid = _cellid->at(i);
-        if (abs(Pos_X_1(cid) - hit_x) > 60 || abs(Pos_Y_1(cid) - hit_y) > 60) {
+        if (abs(Pos_X_1(cid) - hit_x_1) > 60 || abs(Pos_Y_1(cid) - hit_y_1) > 60) {
             noise_cellid->push_back(cid);
             noise_hit->push_back(highgain->at(i));
+            noise_lg->push_back(lowgain->at(i));
             _cellid->erase(_cellid->begin() + i);
             highgain->erase(highgain->begin() + i);
+            lowgain->erase(lowgain->begin() + i);
             i--;
         }
     }
